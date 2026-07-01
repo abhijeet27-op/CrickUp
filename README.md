@@ -1,2 +1,0 @@
-# CrickUp
-Cricket card game
