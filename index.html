@@ -582,20 +582,20 @@
                 <div class="setup-box">
                     <h3>🎯 Create New Game</h3>
                     <p style="color: #a8d5a2; margin-bottom: 15px; font-size: 0.9em;">Generate a unique code to share with your opponent</p>
-                    <button id="createGameBtn" class="btn btn-primary" style="width: 100%;">Create Game</button>
+                    <button id="createGameBtn" class="btn btn-primary" style="width: 100%;">🎮 Create Game</button>
                     <div id="gameCodeDisplay" style="margin-top: 15px; display: none;">
-                        <p style="color: #a8d5a2; font-size: 0.9em;">Share this code with your opponent:</p>
+                        <p style="color: #a8d5a2; font-size: 0.9em;">📋 Share this code with your opponent:</p>
                         <div class="code-display" id="gameCode">XXXX-XXXX</div>
                         <button id="copyCodeBtn" class="btn btn-secondary" style="width: 100%; margin-top: 10px;">📋 Copy Code</button>
-                        <p style="color: #ffd700; font-size: 0.8em; margin-top: 8px;">🔗 Share this link: <span id="shareLink" style="color: #a8d5a2; word-break: break-all; font-size: 0.8em;"></span></p>
+                        <p style="color: #a8d5a2; font-size: 0.8em; margin-top: 8px;">🔗 Or share this link: <span id="shareLink" style="color: #ffd700; word-break: break-all; font-size: 0.8em;"></span></p>
                     </div>
                 </div>
                 <div class="setup-box">
                     <h3>🔗 Join Game</h3>
                     <p style="color: #a8d5a2; margin-bottom: 15px; font-size: 0.9em;">Enter the code shared by your opponent</p>
                     <input type="text" id="joinCodeInput" placeholder="Enter game code (e.g., ABCD-1234)" style="text-transform: uppercase;">
-                    <button id="joinGameBtn" class="btn btn-primary" style="width: 100%;">Join Game</button>
-                    <div id="joinError" style="color: #dc3545; margin-top: 10px; display: none;">Invalid game code!</div>
+                    <button id="joinGameBtn" class="btn btn-primary" style="width: 100%;">🚀 Join Game</button>
+                    <div id="joinError" style="color: #dc3545; margin-top: 10px; display: none;">❌ Invalid game code!</div>
                 </div>
             </div>
         </div>
@@ -1227,6 +1227,12 @@
                 const isMyTurn = this.currentPlayer === this.game.currentTurn;
                 const controls = document.getElementById('battleControls');
                 controls.style.display = isMyTurn && this.game.gameState !== 'gameover' ? 'block' : 'none';
+                
+                // Show which player's turn it is
+                if (this.game.gameState !== 'gameover') {
+                    const turnName = this.game.currentTurn === 'player1' ? 'Player 1' : 'Player 2';
+                    this.gameStatus.textContent = `🎯 Round ${this.game.currentRound + 1}/${this.game.maxRounds} - ${turnName}'s turn`;
+                }
             }
 
             renderMyCards() {
@@ -1321,16 +1327,17 @@
 
                 const isMyTurn = this.currentPlayer === this.game.currentTurn;
                 if (!isMyTurn) {
-                    alert("It's not your turn!");
+                    alert("⏳ It's not your turn! Please wait.");
                     return;
                 }
 
                 const selectedCard = this.game.getSelectedCard(this.currentPlayer);
                 if (!selectedCard) {
-                    alert('Please select a card from your hand first!');
+                    alert('📋 Please select a card from your hand first!');
                     return;
                 }
 
+                // Auto-select opponent's first card if not selected
                 const opponentReady = this.game.isReady(this.opponentPlayer);
                 if (!opponentReady) {
                     const oppCards = this.game.players[this.opponentPlayer].cards;
@@ -1350,7 +1357,7 @@
                 const result = this.game.battle(stat);
 
                 if (!result) {
-                    alert('Battle failed! Please try again.');
+                    alert('❌ Battle failed! Please try again.');
                     return;
                 }
 
@@ -1468,17 +1475,25 @@
 
             copyCode() {
                 const code = document.getElementById('gameCode').textContent;
-                navigator.clipboard.writeText(code).then(() => {
-                    alert('Game code copied to clipboard! Share it with your opponent.');
-                }).catch(() => {
-                    const input = document.createElement('input');
-                    input.value = code;
-                    document.body.appendChild(input);
-                    input.select();
-                    document.execCommand('copy');
-                    document.body.removeChild(input);
-                    alert('Game code copied to clipboard!');
-                });
+                if (navigator.clipboard) {
+                    navigator.clipboard.writeText(code).then(() => {
+                        alert('✅ Game code copied to clipboard! Share it with your opponent.');
+                    }).catch(() => {
+                        this.fallbackCopy(code);
+                    });
+                } else {
+                    this.fallbackCopy(code);
+                }
+            }
+
+            fallbackCopy(text) {
+                const input = document.createElement('input');
+                input.value = text;
+                document.body.appendChild(input);
+                input.select();
+                document.execCommand('copy');
+                document.body.removeChild(input);
+                alert('✅ Game code copied to clipboard!');
             }
         }
 
