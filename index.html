@@ -81,7 +81,8 @@
             font-size: 1.2em;
         }
 
-        .setup-box input {
+        .setup-box input,
+        .setup-box select {
             width: 100%;
             padding: 12px;
             border: 2px solid rgba(255, 255, 255, 0.2);
@@ -92,9 +93,15 @@
             margin-bottom: 10px;
         }
 
-        .setup-box input:focus {
+        .setup-box input:focus,
+        .setup-box select:focus {
             outline: none;
             border-color: #ffd700;
+        }
+
+        .setup-box select option {
+            background: #1a472a;
+            color: #fff;
         }
 
         .btn {
@@ -166,6 +173,39 @@
             color: #ffd700;
             margin: 10px 0;
             border: 2px dashed rgba(255, 215, 0, 0.3);
+            word-break: break-all;
+        }
+
+        /* Category badges */
+        .category-badge {
+            display: inline-block;
+            padding: 2px 10px;
+            border-radius: 12px;
+            font-size: 0.65em;
+            font-weight: 600;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+            margin-top: 3px;
+        }
+
+        .category-batsman {
+            background: #007bff;
+            color: #fff;
+        }
+
+        .category-bowler {
+            background: #dc3545;
+            color: #fff;
+        }
+
+        .category-allrounder {
+            background: #28a745;
+            color: #fff;
+        }
+
+        .category-wicketkeeper {
+            background: #ff8c00;
+            color: #fff;
         }
 
         /* Game Area */
@@ -541,20 +581,6 @@
             }
         }
 
-        @keyframes pulse {
-            0%,
-            100% {
-                transform: scale(1);
-            }
-            50% {
-                transform: scale(1.05);
-            }
-        }
-
-        .pulse {
-            animation: pulse 0.5s ease-in-out;
-        }
-
         /* Responsive */
         @media (max-width: 1024px) {
             .card-display-area {
@@ -592,6 +618,10 @@
             .battle-controls .btn {
                 width: 100%;
                 margin: 5px 0;
+            }
+            .code-display {
+                font-size: 1em;
+                letter-spacing: 2px;
             }
         }
 
@@ -634,17 +664,38 @@
                 <div class="setup-box">
                     <h3>🎯 Create New Game</h3>
                     <p style="color: #a8d5a2; margin-bottom: 15px; font-size: 0.9em;">Generate a unique code to share with your opponent</p>
-                    <button id="createGameBtn" class="btn btn-primary" style="width: 100%;">Create Game</button>
+                    
+                    <label style="color: #a8d5a2; font-size: 0.9em; display: block; margin-bottom: 5px;">Select your player category:</label>
+                    <select id="playerCategory1">
+                        <option value="batsman">Batsman</option>
+                        <option value="bowler">Bowler</option>
+                        <option value="allrounder">All-Rounder</option>
+                        <option value="wicketkeeper">Wicketkeeper</option>
+                    </select>
+                    
+                    <button id="createGameBtn" class="btn btn-primary" style="width: 100%; margin-top: 10px;">Create Game</button>
+                    
                     <div id="gameCodeDisplay" style="margin-top: 15px; display: none;">
                         <p style="color: #a8d5a2; font-size: 0.9em;">Share this code with your opponent:</p>
                         <div class="code-display" id="gameCode">XXXX-XXXX</div>
                         <button id="copyCodeBtn" class="btn btn-secondary" style="width: 100%; margin-top: 10px;">📋 Copy Code</button>
+                        <p style="color: #ffd700; font-size: 0.8em; margin-top: 8px;">🔗 Share this link: <span id="shareLink" style="color: #a8d5a2; word-break: break-all;"></span></p>
                     </div>
                 </div>
+                
                 <div class="setup-box">
                     <h3>🔗 Join Game</h3>
                     <p style="color: #a8d5a2; margin-bottom: 15px; font-size: 0.9em;">Enter the code shared by your opponent</p>
-                    <input type="text" id="joinCodeInput" placeholder="Enter game code (e.g., ABCD-1234)" style="text-transform: uppercase;">
+                    
+                    <label style="color: #a8d5a2; font-size: 0.9em; display: block; margin-bottom: 5px;">Select your player category:</label>
+                    <select id="playerCategory2">
+                        <option value="batsman">Batsman</option>
+                        <option value="bowler">Bowler</option>
+                        <option value="allrounder">All-Rounder</option>
+                        <option value="wicketkeeper">Wicketkeeper</option>
+                    </select>
+                    
+                    <input type="text" id="joinCodeInput" placeholder="Enter game code (e.g., ABCD-1234)" style="text-transform: uppercase; margin-top: 10px;">
                     <button id="joinGameBtn" class="btn btn-primary" style="width: 100%;">Join Game</button>
                     <div id="joinError" style="color: #dc3545; margin-top: 10px; display: none;">Invalid game code!</div>
                 </div>
@@ -661,13 +712,13 @@
             <!-- Score Board -->
             <div class="game-info">
                 <div class="player-info" id="p1Info">
-                    <div class="name">👤 Player 1</div>
+                    <div class="name" id="p1Name">👤 Player 1</div>
                     <div class="score" id="p1Score">0</div>
                     <div class="cards-left" id="p1CardsLeft">Cards: 11</div>
                 </div>
                 <div class="vs-badge">⚡VS⚡</div>
                 <div class="player-info" id="p2Info">
-                    <div class="name">👤 Player 2</div>
+                    <div class="name" id="p2Name">👤 Player 2</div>
                     <div class="score" id="p2Score">0</div>
                     <div class="cards-left" id="p2CardsLeft">Cards: 11</div>
                 </div>
@@ -753,10 +804,14 @@
                 if (bat.player && bat.runs !== undefined) {
                     const bowling = bowlingLookup[bat.player] || { overs: 0, maidens: 0, wickets: 0, runs: 0 };
                     const fielding = fieldingLookup[bat.player] || { catches: 0, details: '' };
+                    
+                    // Determine player category based on stats
+                    const category = getPlayerCategory(bat.player, parseInt(bat.runs) || 0, parseInt(bowling.wickets) || 0, fielding.catches || 0);
 
                     PLAYER_DATABASE.push({
                         name: bat.player,
                         match: matchLabel,
+                        category: category,
                         runs: parseInt(bat.runs) || 0,
                         balls: parseInt(bat.balls) || 0,
                         strikeRate: parseInt(bat.balls) > 0 ? Math.round((parseInt(bat.runs) / parseInt(bat.balls)) * 100 * 10) / 10 : 0,
@@ -780,9 +835,12 @@
 
                         const exists = PLAYER_DATABASE.some(p => p.name === bat.player && p.match === matchLabel);
                         if (!exists) {
+                            const category = getPlayerCategory(bat.player, parseInt(bat.runs) || 0, parseInt(bowling.wickets) || 0, fielding.catches || 0);
+                            
                             PLAYER_DATABASE.push({
                                 name: bat.player,
                                 match: matchLabel,
+                                category: category,
                                 runs: parseInt(bat.runs) || 0,
                                 balls: parseInt(bat.balls) || 0,
                                 strikeRate: parseInt(bat.balls) > 0 ? Math.round((parseInt(bat.runs) / parseInt(bat.balls)) * 100 * 10) / 10 : 0,
@@ -799,6 +857,27 @@
                     }
                 });
             }
+        }
+
+        function getPlayerCategory(name, runs, wickets, catches) {
+            // Check if wicketkeeper (based on name or high catches)
+            const wicketkeepers = ['MS Dhoni', 'Brad Haddin', 'Alec Stewart', 'Mark Boucher', 'Adam Gilchrist', 'Rahul Dravid'];
+            if (wicketkeepers.includes(name) || catches >= 3) {
+                return 'wicketkeeper';
+            }
+            
+            // Check if all-rounder (good at both batting and bowling)
+            if (runs > 100 && wickets > 0) {
+                return 'allrounder';
+            }
+            
+            // Check if bowler (more wickets than runs)
+            if (wickets > 2 && runs < 50) {
+                return 'bowler';
+            }
+            
+            // Default to batsman
+            return 'batsman';
         }
 
         // ============================================================
@@ -1046,12 +1125,12 @@
             constructor() {
                 this.gameId = null;
                 this.players = {
-                    player1: { name: 'Player 1', cards: [], score: 0, playedCards: [] },
-                    player2: { name: 'Player 2', cards: [], score: 0, playedCards: [] }
+                    player1: { name: 'Player 1', cards: [], score: 0, playedCards: [], category: 'batsman' },
+                    player2: { name: 'Player 2', cards: [], score: 0, playedCards: [], category: 'batsman' }
                 };
                 this.currentRound = 0;
                 this.maxRounds = 11;
-                this.gameState = 'setup'; // setup, playing, battle, gameover
+                this.gameState = 'setup';
                 this.currentTurn = 'player1';
                 this.battleHistory = [];
                 this.p1SelectedCard = null;
@@ -1060,7 +1139,7 @@
                 this.p2SelectedIndex = null;
                 this.p1Ready = false;
                 this.p2Ready = false;
-                this.currentPlayer = null; // 'player1' or 'player2'
+                this.currentPlayer = null;
             }
 
             generateGameId() {
@@ -1074,12 +1153,33 @@
                 return code;
             }
 
-            dealCards() {
-                const shuffled = [...PLAYER_DATABASE].sort(() => Math.random() - 0.5);
-                const cardsPerPlayer = 11;
+            dealCards(category1, category2) {
+                // Filter players by category
+                let pool1 = PLAYER_DATABASE.filter(p => p.category === category1);
+                let pool2 = PLAYER_DATABASE.filter(p => p.category === category2);
 
-                this.players.player1.cards = shuffled.slice(0, cardsPerPlayer);
-                this.players.player2.cards = shuffled.slice(cardsPerPlayer, cardsPerPlayer * 2);
+                // If not enough players in category, use all players
+                if (pool1.length < 11) pool1 = PLAYER_DATABASE;
+                if (pool2.length < 11) pool2 = PLAYER_DATABASE;
+
+                // Shuffle and deal
+                const shuffled1 = [...pool1].sort(() => Math.random() - 0.5);
+                const shuffled2 = [...pool2].sort(() => Math.random() - 0.5);
+
+                this.players.player1.cards = shuffled1.slice(0, 11);
+                this.players.player2.cards = shuffled2.slice(0, 11);
+
+                // If either player has less than 11 cards, fill from all players
+                if (this.players.player1.cards.length < 11) {
+                    const all = [...PLAYER_DATABASE].sort(() => Math.random() - 0.5);
+                    const remaining = all.filter(p => !this.players.player1.cards.includes(p));
+                    this.players.player1.cards = [...this.players.player1.cards, ...remaining].slice(0, 11);
+                }
+                if (this.players.player2.cards.length < 11) {
+                    const all = [...PLAYER_DATABASE].sort(() => Math.random() - 0.5);
+                    const remaining = all.filter(p => !this.players.player2.cards.includes(p));
+                    this.players.player2.cards = [...this.players.player2.cards, ...remaining].slice(0, 11);
+                }
 
                 this.players.player1.playedCards = [];
                 this.players.player2.playedCards = [];
@@ -1148,17 +1248,14 @@
                 if (val1 > val2) winner = 'player1';
                 else if (val2 > val1) winner = 'player2';
 
-                // Remove played cards
                 const p1Idx = this.p1SelectedIndex;
                 const p2Idx = this.p2SelectedIndex;
                 this.players.player1.cards.splice(p1Idx, 1);
                 this.players.player2.cards.splice(p2Idx, 1);
 
-                // Track played cards
                 this.players.player1.playedCards.push(card1);
                 this.players.player2.playedCards.push(card2);
 
-                // Update scores
                 if (winner === 'player1') {
                     this.players.player1.score++;
                 } else if (winner === 'player2') {
@@ -1181,7 +1278,6 @@
 
                 this.battleHistory.push(result);
 
-                // Reset selections
                 this.p1SelectedCard = null;
                 this.p2SelectedCard = null;
                 this.p1SelectedIndex = null;
@@ -1189,7 +1285,6 @@
                 this.p1Ready = false;
                 this.p2Ready = false;
 
-                // Check game over
                 if (this.currentRound >= this.maxRounds ||
                     this.players.player1.cards.length === 0 ||
                     this.players.player2.cards.length === 0) {
@@ -1221,28 +1316,6 @@
                 if (this.players.player2.score > this.players.player1.score) return 'player2';
                 return 'tie';
             }
-
-            getGameState() {
-                return {
-                    gameId: this.gameId,
-                    players: this.players,
-                    currentRound: this.currentRound,
-                    maxRounds: this.maxRounds,
-                    gameState: this.gameState,
-                    currentTurn: this.currentTurn,
-                    battleHistory: this.battleHistory
-                };
-            }
-
-            loadGameState(state) {
-                this.gameId = state.gameId;
-                this.players = state.players;
-                this.currentRound = state.currentRound;
-                this.maxRounds = state.maxRounds;
-                this.gameState = state.gameState;
-                this.currentTurn = state.currentTurn;
-                this.battleHistory = state.battleHistory;
-            }
         }
 
         // ============================================================
@@ -1251,7 +1324,7 @@
         class GameUI {
             constructor() {
                 this.game = new CricketCardGame();
-                this.currentPlayer = null; // 'player1' or 'player2'
+                this.currentPlayer = null;
                 this.opponentPlayer = null;
                 this.gameCode = null;
 
@@ -1259,28 +1332,26 @@
                 this.setupScreen = document.getElementById('setupScreen');
                 this.gameArea = document.getElementById('gameArea');
                 this.gameStatus = document.getElementById('gameStatus');
-
                 this.p1Score = document.getElementById('p1Score');
                 this.p2Score = document.getElementById('p2Score');
                 this.p1CardsLeft = document.getElementById('p1CardsLeft');
                 this.p2CardsLeft = document.getElementById('p2CardsLeft');
                 this.p1Info = document.getElementById('p1Info');
                 this.p2Info = document.getElementById('p2Info');
-
+                this.p1Name = document.getElementById('p1Name');
+                this.p2Name = document.getElementById('p2Name');
                 this.p1CardSlot = document.getElementById('p1CardSlot');
                 this.p2CardSlot = document.getElementById('p2CardSlot');
-                this.myCardsContainer = document.getElementById('myCardsContainer');
                 this.myCards = document.getElementById('myCards');
-
+                this.myCardsContainer = document.getElementById('myCardsContainer');
                 this.battleResult = document.getElementById('battleResult');
                 this.battleTitle = document.getElementById('battleTitle');
                 this.battleDetails = document.getElementById('battleDetails');
-
                 this.gameOver = document.getElementById('gameOver');
                 this.winnerName = document.getElementById('winnerName');
                 this.finalScore = document.getElementById('finalScore');
-
                 this.statSelector = document.getElementById('statSelector');
+                this.shareLink = document.getElementById('shareLink');
 
                 // Buttons
                 document.getElementById('createGameBtn').addEventListener('click', () => this.createGame());
@@ -1291,21 +1362,28 @@
                 document.getElementById('playAgainBtn').addEventListener('click', () => this.resetGame());
                 document.getElementById('copyCodeBtn').addEventListener('click', () => this.copyCode());
 
-                // Hide my cards container initially
                 this.myCardsContainer.style.display = 'none';
             }
 
             createGame() {
+                const category = document.getElementById('playerCategory1').value;
                 const code = this.game.generateGameId();
-                this.game.dealCards();
                 this.currentPlayer = 'player1';
                 this.opponentPlayer = 'player2';
                 this.gameCode = code;
+                this.game.players.player1.category = category;
+                this.game.players.player2.category = document.getElementById('playerCategory2').value;
+
+                this.game.dealCards(category, 'batsman');
 
                 document.getElementById('gameCodeDisplay').style.display = 'block';
                 document.getElementById('gameCode').textContent = code;
+                
+                // Generate share link
+                const url = window.location.href.split('?')[0] + '?code=' + code;
+                this.shareLink.textContent = url;
+                
                 document.getElementById('joinError').style.display = 'none';
-
                 this.enterGame();
             }
 
@@ -1316,11 +1394,15 @@
                     return;
                 }
 
+                const category = document.getElementById('playerCategory2').value;
                 this.game.gameId = code;
-                this.game.dealCards();
                 this.currentPlayer = 'player2';
                 this.opponentPlayer = 'player1';
                 this.gameCode = code;
+                this.game.players.player2.category = category;
+                this.game.players.player1.category = document.getElementById('playerCategory1').value;
+
+                this.game.dealCards('batsman', category);
 
                 document.getElementById('joinError').style.display = 'none';
                 this.enterGame();
@@ -1332,11 +1414,12 @@
                 this.game.gameState = 'playing';
                 this.myCardsContainer.style.display = 'block';
 
-                // Show only current player's cards
+                this.p1Name.textContent = '👤 Player 1 ' + this.getCategoryEmoji(this.game.players.player1.category);
+                this.p2Name.textContent = '👤 Player 2 ' + this.getCategoryEmoji(this.game.players.player2.category);
+
                 this.renderGame();
                 this.updateStatus();
 
-                // Auto-select first card
                 setTimeout(() => {
                     const cards = this.game.players[this.currentPlayer].cards;
                     if (cards.length > 0) {
@@ -1346,30 +1429,32 @@
                 }, 500);
             }
 
+            getCategoryEmoji(category) {
+                const map = {
+                    'batsman': '🏏',
+                    'bowler': '🎯',
+                    'allrounder': '⭐',
+                    'wicketkeeper': '🧤'
+                };
+                return map[category] || '🏏';
+            }
+
             renderGame() {
                 const p1 = this.game.players.player1;
                 const p2 = this.game.players.player2;
 
-                // Update scores
                 this.p1Score.textContent = p1.score;
                 this.p2Score.textContent = p2.score;
                 this.p1CardsLeft.textContent = `Cards: ${p1.cards.length}`;
                 this.p2CardsLeft.textContent = `Cards: ${p2.cards.length}`;
 
-                // Update active player
                 this.p1Info.classList.toggle('active', this.game.currentTurn === 'player1');
                 this.p2Info.classList.toggle('active', this.game.currentTurn === 'player2');
 
-                // Render current player's cards (only if it's their turn)
                 this.renderMyCards();
-
-                // Render battle cards
                 this.renderBattleCards();
-
-                // Update status
                 this.updateStatus();
 
-                // Show/hide controls
                 const isMyTurn = this.currentPlayer === this.game.currentTurn;
                 const controls = document.getElementById('battleControls');
                 controls.style.display = isMyTurn && this.game.gameState !== 'gameover' ? 'block' : 'none';
@@ -1392,11 +1477,12 @@
                     if (selectedIndex === index) div.classList.add('selected');
 
                     const isUsed = this.game.players[this.currentPlayer].playedCards.includes(card);
+                    const categoryEmoji = this.getCategoryEmoji(card.category);
 
                     div.innerHTML = `
-                        <div class="name">${card.name}</div>
+                        <div class="name">${categoryEmoji} ${card.name}</div>
                         <div class="stats-mini">R:${card.runs} | SR:${card.strikeRate} | W:${card.wickets}</div>
-                        <div style="font-size:0.65em;color:#666;margin-top:2px;">${card.matchInfo}</div>
+                        <div style="font-size:0.6em;color:#888;margin-top:2px;">${card.matchInfo}</div>
                     `;
 
                     if (!isUsed) {
@@ -1419,7 +1505,6 @@
                 const p1Card = this.game.getSelectedCard('player1');
                 const p2Card = this.game.getSelectedCard('player2');
 
-                // Player 1 card
                 if (p1Card) {
                     this.p1CardSlot.innerHTML = this.createCardHTML(p1Card);
                     this.p1CardSlot.className = 'card-slot has-card';
@@ -1428,7 +1513,6 @@
                     this.p1CardSlot.className = 'card-slot';
                 }
 
-                // Player 2 card
                 if (p2Card) {
                     this.p2CardSlot.innerHTML = this.createCardHTML(p2Card);
                     this.p2CardSlot.className = 'card-slot has-card';
@@ -1439,9 +1523,18 @@
             }
 
             createCardHTML(card) {
+                const categoryEmoji = this.getCategoryEmoji(card.category);
+                const categoryClass = {
+                    'batsman': 'category-batsman',
+                    'bowler': 'category-bowler',
+                    'allrounder': 'category-allrounder',
+                    'wicketkeeper': 'category-wicketkeeper'
+                }[card.category] || 'category-batsman';
+
                 return `
                     <div class="card">
-                        <div class="player-name-large">${card.name}</div>
+                        <div class="player-name-large">${categoryEmoji} ${card.name}</div>
+                        <span class="category-badge ${categoryClass}">${card.category.toUpperCase()}</span>
                         <div class="match-info">${card.matchInfo}</div>
                         <div class="stats-grid">
                             <div class="stat-item"><span class="stat-label">Runs</span> <span class="stat-value">${card.runs}</span></div>
@@ -1473,17 +1566,12 @@
                     return;
                 }
 
-                // Check if opponent has selected a card
                 const opponentReady = this.game.isReady(this.opponentPlayer);
                 if (!opponentReady) {
-                    // In manual mode, opponent selects on their device
-                    alert(`Waiting for ${this.opponentPlayer === 'player1' ? 'Player 1' : 'Player 2'} to select a card...`);
-                    // For manual mode, we'll auto-select opponent's first card if not selected
                     const oppCards = this.game.players[this.opponentPlayer].cards;
                     if (oppCards.length > 0) {
                         this.game.selectCard(this.opponentPlayer, 0);
                         this.renderGame();
-                        // Proceed with battle after short delay
                         setTimeout(() => this.executeBattle(), 500);
                     }
                     return;
@@ -1528,9 +1616,12 @@
                     catches: 'Catches'
                 };
 
+                const cat1 = this.getCategoryEmoji(result.player1Card.category);
+                const cat2 = this.getCategoryEmoji(result.player2Card.category);
+
                 this.battleDetails.innerHTML = `
                     <div class="battle-player">
-                        <div style="font-weight:600;color:#ffd700;">Player 1</div>
+                        <div style="font-weight:600;color:#ffd700;">${cat1} Player 1</div>
                         <div style="font-size:1.1em;">${result.player1Card.name}</div>
                         <div class="stat-value ${result.winner === 'player1' ? 'win' : result.winner === 'player2' ? 'lose' : 'tie'}">
                             ${result.val1}
@@ -1539,7 +1630,7 @@
                     </div>
                     <div class="battle-vs">${winnerText}</div>
                     <div class="battle-player">
-                        <div style="font-weight:600;color:#ffd700;">Player 2</div>
+                        <div style="font-weight:600;color:#ffd700;">${cat2} Player 2</div>
                         <div style="font-size:1.1em;">${result.player2Card.name}</div>
                         <div class="stat-value ${result.winner === 'player2' ? 'win' : result.winner === 'player1' ? 'lose' : 'tie'}">
                             ${result.val2}
@@ -1548,14 +1639,9 @@
                     </div>
                 `;
 
-                // Update scores in battle result
                 this.p1Score.textContent = result.p1Score;
                 this.p2Score.textContent = result.p2Score;
-
-                // Disable play button during battle result
                 document.getElementById('playCardBtn').disabled = true;
-
-                // Scroll to result
                 this.battleResult.scrollIntoView({ behavior: 'smooth', block: 'center' });
             }
 
@@ -1567,7 +1653,6 @@
                     this.showGameOver();
                 } else {
                     this.renderGame();
-                    // Auto-select first card for next round
                     const cards = this.game.players[this.currentPlayer].cards;
                     if (cards.length > 0) {
                         this.game.selectCard(this.currentPlayer, 0);
@@ -1639,7 +1724,6 @@
             console.log('🏏 Cricket Card Game loaded!');
             console.log(`📊 Database has ${PLAYER_DATABASE.length} player cards`);
 
-            // Check for game code in URL
             const params = new URLSearchParams(window.location.search);
             const code = params.get('code');
             if (code) {
