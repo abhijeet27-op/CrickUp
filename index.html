@@ -24,7 +24,6 @@
             margin: 0 auto;
         }
 
-        /* Header */
         .header {
             text-align: center;
             padding: 20px 0;
@@ -50,7 +49,6 @@
             margin-top: 5px;
         }
 
-        /* Game Setup */
         .game-setup {
             background: rgba(255, 255, 255, 0.08);
             backdrop-filter: blur(10px);
@@ -81,8 +79,7 @@
             font-size: 1.2em;
         }
 
-        .setup-box input,
-        .setup-box select {
+        .setup-box input {
             width: 100%;
             padding: 12px;
             border: 2px solid rgba(255, 255, 255, 0.2);
@@ -93,15 +90,9 @@
             margin-bottom: 10px;
         }
 
-        .setup-box input:focus,
-        .setup-box select:focus {
+        .setup-box input:focus {
             outline: none;
             border-color: #ffd700;
-        }
-
-        .setup-box select option {
-            background: #1a472a;
-            color: #fff;
         }
 
         .btn {
@@ -176,39 +167,6 @@
             word-break: break-all;
         }
 
-        /* Category badges */
-        .category-badge {
-            display: inline-block;
-            padding: 2px 10px;
-            border-radius: 12px;
-            font-size: 0.65em;
-            font-weight: 600;
-            text-transform: uppercase;
-            letter-spacing: 0.5px;
-            margin-top: 3px;
-        }
-
-        .category-batsman {
-            background: #007bff;
-            color: #fff;
-        }
-
-        .category-bowler {
-            background: #dc3545;
-            color: #fff;
-        }
-
-        .category-allrounder {
-            background: #28a745;
-            color: #fff;
-        }
-
-        .category-wicketkeeper {
-            background: #ff8c00;
-            color: #fff;
-        }
-
-        /* Game Area */
         .game-area {
             display: none;
         }
@@ -272,7 +230,6 @@
             padding: 0 20px;
         }
 
-        /* Card Display Area */
         .card-display-area {
             display: grid;
             grid-template-columns: 1fr auto 1fr;
@@ -379,7 +336,6 @@
             font-style: italic;
         }
 
-        /* Cards in hand (hidden from opponent) */
         .cards-in-hand {
             margin-top: 20px;
             background: rgba(0, 0, 0, 0.3);
@@ -433,12 +389,16 @@
         }
 
         .card-mini .stats-mini {
-            font-size: 0.75em;
+            font-size: 0.7em;
             color: #a8d5a2;
             margin-top: 4px;
         }
 
-        /* Battle Controls */
+        .card-mini .stat-highlight {
+            color: #ffd700;
+            font-weight: 600;
+        }
+
         .battle-controls {
             text-align: center;
             padding: 20px;
@@ -467,7 +427,6 @@
             margin: 0 5px;
         }
 
-        /* Battle Result */
         .battle-result {
             background: rgba(0, 0, 0, 0.7);
             padding: 20px;
@@ -486,18 +445,6 @@
         .battle-result h3 {
             font-size: 1.8em;
             margin-bottom: 10px;
-        }
-
-        .battle-result .winner-text {
-            color: #ffd700;
-        }
-
-        .battle-result .loser-text {
-            color: #ff6b6b;
-        }
-
-        .battle-result .tie-text {
-            color: #ffa500;
         }
 
         .battle-comparison {
@@ -537,7 +484,6 @@
             color: #ffd700;
         }
 
-        /* Game Over */
         .game-over {
             background: rgba(0, 0, 0, 0.8);
             padding: 30px;
@@ -569,7 +515,6 @@
             color: #a8d5a2;
         }
 
-        /* Animations */
         @keyframes fadeIn {
             from {
                 opacity: 0;
@@ -581,7 +526,6 @@
             }
         }
 
-        /* Responsive */
         @media (max-width: 1024px) {
             .card-display-area {
                 grid-template-columns: 1fr;
@@ -624,92 +568,41 @@
                 letter-spacing: 2px;
             }
         }
-
-        /* Utilities */
-        .text-center {
-            text-align: center;
-        }
-        .mt-10 {
-            margin-top: 10px;
-        }
-        .mt-20 {
-            margin-top: 20px;
-        }
-        .mb-10 {
-            margin-bottom: 10px;
-        }
-        .hidden {
-            display: none !important;
-        }
-        .flex-center {
-            display: flex;
-            justify-content: center;
-            align-items: center;
-            gap: 10px;
-            flex-wrap: wrap;
-        }
     </style>
 </head>
 <body>
     <div class="container">
-        <!-- Header -->
         <div class="header">
             <h1>🏏 Cricket Card Game</h1>
             <p>Top Trumps - 11 Cards Each, Best of 11 Rounds!</p>
         </div>
 
-        <!-- Game Setup -->
         <div id="setupScreen" class="game-setup">
             <div class="setup-grid">
                 <div class="setup-box">
                     <h3>🎯 Create New Game</h3>
                     <p style="color: #a8d5a2; margin-bottom: 15px; font-size: 0.9em;">Generate a unique code to share with your opponent</p>
-                    
-                    <label style="color: #a8d5a2; font-size: 0.9em; display: block; margin-bottom: 5px;">Select your player category:</label>
-                    <select id="playerCategory1">
-                        <option value="batsman">Batsman</option>
-                        <option value="bowler">Bowler</option>
-                        <option value="allrounder">All-Rounder</option>
-                        <option value="wicketkeeper">Wicketkeeper</option>
-                    </select>
-                    
-                    <button id="createGameBtn" class="btn btn-primary" style="width: 100%; margin-top: 10px;">Create Game</button>
-                    
+                    <button id="createGameBtn" class="btn btn-primary" style="width: 100%;">Create Game</button>
                     <div id="gameCodeDisplay" style="margin-top: 15px; display: none;">
                         <p style="color: #a8d5a2; font-size: 0.9em;">Share this code with your opponent:</p>
                         <div class="code-display" id="gameCode">XXXX-XXXX</div>
                         <button id="copyCodeBtn" class="btn btn-secondary" style="width: 100%; margin-top: 10px;">📋 Copy Code</button>
-                        <p style="color: #ffd700; font-size: 0.8em; margin-top: 8px;">🔗 Share this link: <span id="shareLink" style="color: #a8d5a2; word-break: break-all;"></span></p>
+                        <p style="color: #ffd700; font-size: 0.8em; margin-top: 8px;">🔗 Share this link: <span id="shareLink" style="color: #a8d5a2; word-break: break-all; font-size: 0.8em;"></span></p>
                     </div>
                 </div>
-                
                 <div class="setup-box">
                     <h3>🔗 Join Game</h3>
                     <p style="color: #a8d5a2; margin-bottom: 15px; font-size: 0.9em;">Enter the code shared by your opponent</p>
-                    
-                    <label style="color: #a8d5a2; font-size: 0.9em; display: block; margin-bottom: 5px;">Select your player category:</label>
-                    <select id="playerCategory2">
-                        <option value="batsman">Batsman</option>
-                        <option value="bowler">Bowler</option>
-                        <option value="allrounder">All-Rounder</option>
-                        <option value="wicketkeeper">Wicketkeeper</option>
-                    </select>
-                    
-                    <input type="text" id="joinCodeInput" placeholder="Enter game code (e.g., ABCD-1234)" style="text-transform: uppercase; margin-top: 10px;">
+                    <input type="text" id="joinCodeInput" placeholder="Enter game code (e.g., ABCD-1234)" style="text-transform: uppercase;">
                     <button id="joinGameBtn" class="btn btn-primary" style="width: 100%;">Join Game</button>
                     <div id="joinError" style="color: #dc3545; margin-top: 10px; display: none;">Invalid game code!</div>
                 </div>
             </div>
         </div>
 
-        <!-- Game Area -->
         <div id="gameArea" class="game-area">
-            <!-- Game Status -->
-            <div class="game-status" id="gameStatus">
-                🎮 Game Ready - Waiting for players...
-            </div>
+            <div class="game-status" id="gameStatus">🎮 Game Ready - Waiting for players...</div>
 
-            <!-- Score Board -->
             <div class="game-info">
                 <div class="player-info" id="p1Info">
                     <div class="name" id="p1Name">👤 Player 1</div>
@@ -724,7 +617,6 @@
                 </div>
             </div>
 
-            <!-- Card Display (Current Battle) -->
             <div class="card-display-area">
                 <div class="card-slot" id="p1CardSlot">
                     <div class="placeholder">👤 Player 1<br>Select a card</div>
@@ -735,13 +627,11 @@
                 </div>
             </div>
 
-            <!-- Cards in Hand (Only visible to the player) -->
             <div class="cards-in-hand" id="myCardsContainer">
-                <h4>🎴 Your Cards (Select one to play):</h4>
+                <h4>🎴 Your Cards (Click a card to select it):</h4>
                 <div class="card-grid" id="myCards"></div>
             </div>
 
-            <!-- Battle Controls -->
             <div class="battle-controls" id="battleControls">
                 <label style="color: #a8d5a2; font-weight: 600;">Choose stat to compare:</label>
                 <select id="statSelector">
@@ -754,18 +644,16 @@
                     <option value="overs">Overs</option>
                     <option value="catches">Catches</option>
                 </select>
-                <button id="playCardBtn" class="btn btn-primary">⚡ Play Card</button>
+                <button id="playCardBtn" class="btn btn-primary">⚡ Battle!</button>
                 <button id="resetGameBtn" class="btn btn-danger">🔄 New Game</button>
             </div>
 
-            <!-- Battle Result -->
             <div class="battle-result" id="battleResult">
                 <h3 id="battleTitle">⚔️ Battle Result</h3>
                 <div class="battle-comparison" id="battleDetails"></div>
                 <button id="nextRoundBtn" class="btn btn-success">➡️ Next Round</button>
             </div>
 
-            <!-- Game Over -->
             <div class="game-over" id="gameOver">
                 <div class="trophy">🏆</div>
                 <div class="winner-name" id="winnerName">Player Wins!</div>
@@ -777,7 +665,7 @@
 
     <script>
         // ============================================================
-        // DATABASE - All players from the 3 match files
+        // DATABASE
         // ============================================================
         const PLAYER_DATABASE = [];
 
@@ -804,14 +692,10 @@
                 if (bat.player && bat.runs !== undefined) {
                     const bowling = bowlingLookup[bat.player] || { overs: 0, maidens: 0, wickets: 0, runs: 0 };
                     const fielding = fieldingLookup[bat.player] || { catches: 0, details: '' };
-                    
-                    // Determine player category based on stats
-                    const category = getPlayerCategory(bat.player, parseInt(bat.runs) || 0, parseInt(bowling.wickets) || 0, fielding.catches || 0);
 
                     PLAYER_DATABASE.push({
                         name: bat.player,
                         match: matchLabel,
-                        category: category,
                         runs: parseInt(bat.runs) || 0,
                         balls: parseInt(bat.balls) || 0,
                         strikeRate: parseInt(bat.balls) > 0 ? Math.round((parseInt(bat.runs) / parseInt(bat.balls)) * 100 * 10) / 10 : 0,
@@ -835,12 +719,9 @@
 
                         const exists = PLAYER_DATABASE.some(p => p.name === bat.player && p.match === matchLabel);
                         if (!exists) {
-                            const category = getPlayerCategory(bat.player, parseInt(bat.runs) || 0, parseInt(bowling.wickets) || 0, fielding.catches || 0);
-                            
                             PLAYER_DATABASE.push({
                                 name: bat.player,
                                 match: matchLabel,
-                                category: category,
                                 runs: parseInt(bat.runs) || 0,
                                 balls: parseInt(bat.balls) || 0,
                                 strikeRate: parseInt(bat.balls) > 0 ? Math.round((parseInt(bat.runs) / parseInt(bat.balls)) * 100 * 10) / 10 : 0,
@@ -859,54 +740,22 @@
             }
         }
 
-        function getPlayerCategory(name, runs, wickets, catches) {
-            // Check if wicketkeeper (based on name or high catches)
-            const wicketkeepers = ['MS Dhoni', 'Brad Haddin', 'Alec Stewart', 'Mark Boucher', 'Adam Gilchrist', 'Rahul Dravid'];
-            if (wicketkeepers.includes(name) || catches >= 3) {
-                return 'wicketkeeper';
-            }
-            
-            // Check if all-rounder (good at both batting and bowling)
-            if (runs > 100 && wickets > 0) {
-                return 'allrounder';
-            }
-            
-            // Check if bowler (more wickets than runs)
-            if (wickets > 2 && runs < 50) {
-                return 'bowler';
-            }
-            
-            // Default to batsman
-            return 'batsman';
-        }
-
-        // ============================================================
-        // EMBEDDED MATCH DATA
-        // ============================================================
+        // Match Data
         const match1 = {
             "match_info": { "match": "India vs Australia, 3rd ODI", "date": "2013-10-19" },
             "scorecard": {
                 "innings_1": {
                     "batting": [
-                        { "player": "Rohit Sharma", "dismissal": "c Mishray b Johnson", "runs": 11, "balls": 23, "fours": 2,
-                            "sixes": 0 },
-                        { "player": "Shikhar Dhawan", "dismissal": "c Haddin b Johnson", "runs": 8, "balls": 11, "fours": 1,
-                            "sixes": 0 },
-                        { "player": "Suresh Raina", "dismissal": "c Watson b Johnson", "runs": 17, "balls": 25, "fours": 3,
-                            "sixes": 0 },
-                        { "player": "Virat Kohli", "dismissal": "c Haddin b Johnson", "runs": 68, "balls": 73, "fours": 9,
-                            "sixes": 0 },
-                        { "player": "Yuvraj Singh", "dismissal": "c Haddin b Johnson", "runs": 0, "balls": 1, "fours": 0,
-                            "sixes": 0 },
+                        { "player": "Rohit Sharma", "dismissal": "c Mishray b Johnson", "runs": 11, "balls": 23, "fours": 2, "sixes": 0 },
+                        { "player": "Shikhar Dhawan", "dismissal": "c Haddin b Johnson", "runs": 8, "balls": 11, "fours": 1, "sixes": 0 },
+                        { "player": "Suresh Raina", "dismissal": "c Watson b Johnson", "runs": 17, "balls": 25, "fours": 3, "sixes": 0 },
+                        { "player": "Virat Kohli", "dismissal": "c Haddin b Johnson", "runs": 68, "balls": 73, "fours": 9, "sixes": 0 },
+                        { "player": "Yuvraj Singh", "dismissal": "c Haddin b Johnson", "runs": 0, "balls": 1, "fours": 0, "sixes": 0 },
                         { "player": "MS Dhoni", "dismissal": "not out", "runs": 139, "balls": 121, "fours": 12, "sixes": 5 },
-                        { "player": "Ravindra Jadeja", "dismissal": "c Voges b Johnson", "runs": 2, "balls": 4, "fours": 0,
-                            "sixes": 0 },
-                        { "player": "Ravichandran Ashwin", "dismissal": "c Hughes b McKay", "runs": 28, "balls": 35, "fours": 2,
-                            "sixes": 0 },
-                        { "player": "Bhuvneshwar Kumar", "dismissal": "c Finch b Run Out", "runs": 10, "balls": 8, "fours": 0,
-                            "sixes": 0 },
-                        { "player": "Vinay Kumar", "dismissal": "c Bailey b Faulkner", "runs": 0, "balls": 1, "fours": 0,
-                            "sixes": 0 },
+                        { "player": "Ravindra Jadeja", "dismissal": "c Voges b Johnson", "runs": 2, "balls": 4, "fours": 0, "sixes": 0 },
+                        { "player": "Ravichandran Ashwin", "dismissal": "c Hughes b McKay", "runs": 28, "balls": 35, "fours": 2, "sixes": 0 },
+                        { "player": "Bhuvneshwar Kumar", "dismissal": "c Finch b Run Out", "runs": 10, "balls": 8, "fours": 0, "sixes": 0 },
+                        { "player": "Vinay Kumar", "dismissal": "c Bailey b Faulkner", "runs": 0, "balls": 1, "fours": 0, "sixes": 0 },
                         { "player": "Ishant Sharma", "dismissal": "not out", "runs": 0, "balls": 1, "fours": 0, "sixes": 0 }
                     ],
                     "bowling": [
@@ -920,21 +769,14 @@
                 },
                 "innings_2": {
                     "batting": [
-                        { "player": "Aaron Finch", "dismissal": "lbw b Kumar", "runs": 38, "balls": 40, "fours": 5,
-                            "sixes": 1 },
-                        { "player": "Phil Hughes", "dismissal": "c Dhoni b Kumar", "runs": 22, "balls": 34, "fours": 3,
-                            "sixes": 0 },
-                        { "player": "Shane Watson", "dismissal": "lbw b Jadeja", "runs": 11, "balls": 19, "fours": 1,
-                            "sixes": 0 },
-                        { "player": "George Bailey", "dismissal": "lbw b Ashwin", "runs": 43, "balls": 48, "fours": 4,
-                            "sixes": 1 },
+                        { "player": "Aaron Finch", "dismissal": "lbw b Kumar", "runs": 38, "balls": 40, "fours": 5, "sixes": 1 },
+                        { "player": "Phil Hughes", "dismissal": "c Dhoni b Kumar", "runs": 22, "balls": 34, "fours": 3, "sixes": 0 },
+                        { "player": "Shane Watson", "dismissal": "lbw b Jadeja", "runs": 11, "balls": 19, "fours": 1, "sixes": 0 },
+                        { "player": "George Bailey", "dismissal": "lbw b Ashwin", "runs": 43, "balls": 48, "fours": 4, "sixes": 1 },
                         { "player": "Adam Voges", "dismissal": "not out", "runs": 76, "balls": 88, "fours": 7, "sixes": 0 },
-                        { "player": "Glenn Maxwell", "dismissal": "c & b Mishra", "runs": 3, "balls": 5, "fours": 0,
-                            "sixes": 0 },
-                        { "player": "Brad Haddin", "dismissal": "c Kumar b Kumar", "runs": 24, "balls": 28, "fours": 2,
-                            "sixes": 0 },
-                        { "player": "James Faulkner", "dismissal": "not out", "runs": 64, "balls": 29, "fours": 2,
-                            "sixes": 6 }
+                        { "player": "Glenn Maxwell", "dismissal": "c & b Mishra", "runs": 3, "balls": 5, "fours": 0, "sixes": 0 },
+                        { "player": "Brad Haddin", "dismissal": "c Kumar b Kumar", "runs": 24, "balls": 28, "fours": 2, "sixes": 0 },
+                        { "player": "James Faulkner", "dismissal": "not out", "runs": 64, "balls": 29, "fours": 2, "sixes": 6 }
                     ],
                     "bowling": [
                         { "player": "Bhuvneshwar Kumar", "overs": 8.0, "maidens": 1, "runs": 50, "wickets": 1 },
@@ -967,19 +809,13 @@
             "scorecard": {
                 "innings_1": {
                     "batting": [
-                        { "player": "Marcus Trescothick", "dismissal": "b Kumble", "runs": 109, "balls": 100, "fours": 7,
-                            "sixes": 2 },
+                        { "player": "Marcus Trescothick", "dismissal": "b Kumble", "runs": 109, "balls": 100, "fours": 7, "sixes": 2 },
                         { "player": "Nick Knight", "dismissal": "b Khan", "runs": 14, "balls": 29, "fours": 2, "sixes": 0 },
-                        { "player": "Nasser Hussain", "dismissal": "c Khan b Nehra", "runs": 115, "balls": 128, "fours": 10,
-                            "sixes": 0 },
-                        { "player": "Michael Vaughan", "dismissal": "c Dravid b Harbhajan", "runs": 4, "balls": 7, "fours": 0,
-                            "sixes": 0 },
-                        { "player": "Alec Stewart", "dismissal": "st Dravid b Kumble", "runs": 0, "balls": 2, "fours": 0,
-                            "sixes": 0 },
-                        { "player": "Andrew Flintoff", "dismissal": "b Khan", "runs": 40, "balls": 32, "fours": 4,
-                            "sixes": 1 },
-                        { "player": "Paul Collingwood", "dismissal": "not out", "runs": 14, "balls": 7, "fours": 2,
-                            "sixes": 0 },
+                        { "player": "Nasser Hussain", "dismissal": "c Khan b Nehra", "runs": 115, "balls": 128, "fours": 10, "sixes": 0 },
+                        { "player": "Michael Vaughan", "dismissal": "c Dravid b Harbhajan", "runs": 4, "balls": 7, "fours": 0, "sixes": 0 },
+                        { "player": "Alec Stewart", "dismissal": "st Dravid b Kumble", "runs": 0, "balls": 2, "fours": 0, "sixes": 0 },
+                        { "player": "Andrew Flintoff", "dismissal": "b Khan", "runs": 40, "balls": 32, "fours": 4, "sixes": 1 },
+                        { "player": "Paul Collingwood", "dismissal": "not out", "runs": 14, "balls": 7, "fours": 2, "sixes": 0 },
                         { "player": "Ronnie Irani", "dismissal": "not out", "runs": 4, "balls": 3, "fours": 0, "sixes": 0 }
                     ],
                     "bowling": [
@@ -994,24 +830,15 @@
                 },
                 "innings_2": {
                     "batting": [
-                        { "player": "Sourav Ganguly", "dismissal": "b Giles", "runs": 60, "balls": 43, "fours": 10,
-                            "sixes": 1 },
-                        { "player": "Virender Sehwag", "dismissal": "b Irani", "runs": 45, "balls": 49, "fours": 7,
-                            "sixes": 0 },
-                        { "player": "Dinesh Mongia", "dismissal": "c Stewart b Irani", "runs": 9, "balls": 12, "fours": 1,
-                            "sixes": 0 },
-                        { "player": "Sachin Tendulkar", "dismissal": "b Giles", "runs": 14, "balls": 19, "fours": 2,
-                            "sixes": 0 },
-                        { "player": "Rahul Dravid", "dismissal": "c Knight b Flintoff", "runs": 5, "balls": 14, "fours": 0,
-                            "sixes": 0 },
-                        { "player": "Yuvraj Singh", "dismissal": "c Collingwood b Flintoff", "runs": 69, "balls": 63,
-                            "fours": 9, "sixes": 1 },
-                        { "player": "Mohammad Kaif", "dismissal": "not out", "runs": 87, "balls": 75, "fours": 6,
-                            "sixes": 2 },
-                        { "player": "Harbhajan Singh", "dismissal": "b Flintoff", "runs": 15, "balls": 13, "fours": 2,
-                            "sixes": 0 },
-                        { "player": "Anil Kumble", "dismissal": "c Stewart b Kirtley", "runs": 0, "balls": 2, "fours": 0,
-                            "sixes": 0 },
+                        { "player": "Sourav Ganguly", "dismissal": "b Giles", "runs": 60, "balls": 43, "fours": 10, "sixes": 1 },
+                        { "player": "Virender Sehwag", "dismissal": "b Irani", "runs": 45, "balls": 49, "fours": 7, "sixes": 0 },
+                        { "player": "Dinesh Mongia", "dismissal": "c Stewart b Irani", "runs": 9, "balls": 12, "fours": 1, "sixes": 0 },
+                        { "player": "Sachin Tendulkar", "dismissal": "b Giles", "runs": 14, "balls": 19, "fours": 2, "sixes": 0 },
+                        { "player": "Rahul Dravid", "dismissal": "c Knight b Flintoff", "runs": 5, "balls": 14, "fours": 0, "sixes": 0 },
+                        { "player": "Yuvraj Singh", "dismissal": "c Collingwood b Flintoff", "runs": 69, "balls": 63, "fours": 9, "sixes": 1 },
+                        { "player": "Mohammad Kaif", "dismissal": "not out", "runs": 87, "balls": 75, "fours": 6, "sixes": 2 },
+                        { "player": "Harbhajan Singh", "dismissal": "b Flintoff", "runs": 15, "balls": 13, "fours": 2, "sixes": 0 },
+                        { "player": "Anil Kumble", "dismissal": "c Stewart b Kirtley", "runs": 0, "balls": 2, "fours": 0, "sixes": 0 },
                         { "player": "Zaheer Khan", "dismissal": "not out", "runs": 4, "balls": 1, "fours": 0, "sixes": 0 }
                     ],
                     "bowling": [
@@ -1042,16 +869,11 @@
             "scorecard": {
                 "innings_1": {
                     "batting": [
-                        { "player": "Adam Gilchrist", "dismissal": "c Telemachus b Smith", "runs": 55, "balls": 44,
-                            "fours": 9, "sixes": 0 },
-                        { "player": "Simon Katich", "dismissal": "c Kemp b Ntini", "runs": 79, "balls": 90, "fours": 9,
-                            "sixes": 1 },
-                        { "player": "Ricky Ponting", "dismissal": "c Dippenaar b Telemachus", "runs": 164, "balls": 105,
-                            "fours": 13, "sixes": 9 },
-                        { "player": "Michael Hussey", "dismissal": "c Hall b Telemachus", "runs": 62, "balls": 51,
-                            "fours": 3, "sixes": 3 },
-                        { "player": "Andrew Symonds", "dismissal": "not out", "runs": 27, "balls": 13, "fours": 3,
-                            "sixes": 1 },
+                        { "player": "Adam Gilchrist", "dismissal": "c Telemachus b Smith", "runs": 55, "balls": 44, "fours": 9, "sixes": 0 },
+                        { "player": "Simon Katich", "dismissal": "c Kemp b Ntini", "runs": 79, "balls": 90, "fours": 9, "sixes": 1 },
+                        { "player": "Ricky Ponting", "dismissal": "c Dippenaar b Telemachus", "runs": 164, "balls": 105, "fours": 13, "sixes": 9 },
+                        { "player": "Michael Hussey", "dismissal": "c Hall b Telemachus", "runs": 62, "balls": 51, "fours": 3, "sixes": 3 },
+                        { "player": "Andrew Symonds", "dismissal": "not out", "runs": 27, "balls": 13, "fours": 3, "sixes": 1 },
                         { "player": "Brett Lee", "dismissal": "not out", "runs": 9, "balls": 7, "fours": 0, "sixes": 0 }
                     ],
                     "bowling": [
@@ -1065,24 +887,15 @@
                 },
                 "innings_2": {
                     "batting": [
-                        { "player": "Graeme Smith", "dismissal": "c Hussey b Bracken", "runs": 90, "balls": 55, "fours": 13,
-                            "sixes": 2 },
-                        { "player": "Boeta Dippenaar", "dismissal": "b Bracken", "runs": 1, "balls": 7, "fours": 0,
-                            "sixes": 0 },
-                        { "player": "Herschelle Gibbs", "dismissal": "c Symonds b Symonds", "runs": 175, "balls": 111,
-                            "fours": 21, "sixes": 7 },
-                        { "player": "AB de Villiers", "dismissal": "c Clark b Bracken", "runs": 14, "balls": 20, "fours": 1,
-                            "sixes": 0 },
-                        { "player": "Jacques Kallis", "dismissal": "c & b Clark", "runs": 20, "balls": 21, "fours": 1,
-                            "sixes": 0 },
-                        { "player": "Justin Kemp", "dismissal": "c Martyn b Bracken", "runs": 13, "balls": 17, "fours": 1,
-                            "sixes": 0 },
-                        { "player": "Mark Boucher", "dismissal": "not out", "runs": 50, "balls": 43, "fours": 4,
-                            "sixes": 0 },
-                        { "player": "Andrew Hall", "dismissal": "c Clark b Lee", "runs": 7, "balls": 6, "fours": 1,
-                            "sixes": 0 },
-                        { "player": "Roger Telemachus", "dismissal": "c Hussey b Bracken", "runs": 12, "balls": 6,
-                            "fours": 2, "sixes": 0 },
+                        { "player": "Graeme Smith", "dismissal": "c Hussey b Bracken", "runs": 90, "balls": 55, "fours": 13, "sixes": 2 },
+                        { "player": "Boeta Dippenaar", "dismissal": "b Bracken", "runs": 1, "balls": 7, "fours": 0, "sixes": 0 },
+                        { "player": "Herschelle Gibbs", "dismissal": "c Symonds b Symonds", "runs": 175, "balls": 111, "fours": 21, "sixes": 7 },
+                        { "player": "AB de Villiers", "dismissal": "c Clark b Bracken", "runs": 14, "balls": 20, "fours": 1, "sixes": 0 },
+                        { "player": "Jacques Kallis", "dismissal": "c & b Clark", "runs": 20, "balls": 21, "fours": 1, "sixes": 0 },
+                        { "player": "Justin Kemp", "dismissal": "c Martyn b Bracken", "runs": 13, "balls": 17, "fours": 1, "sixes": 0 },
+                        { "player": "Mark Boucher", "dismissal": "not out", "runs": 50, "balls": 43, "fours": 4, "sixes": 0 },
+                        { "player": "Andrew Hall", "dismissal": "c Clark b Lee", "runs": 7, "balls": 6, "fours": 1, "sixes": 0 },
+                        { "player": "Roger Telemachus", "dismissal": "c Hussey b Bracken", "runs": 12, "balls": 6, "fours": 2, "sixes": 0 },
                         { "player": "Makhaya Ntini", "dismissal": "not out", "runs": 1, "balls": 1, "fours": 0, "sixes": 0 }
                     ],
                     "bowling": [
@@ -1111,12 +924,11 @@
             }
         };
 
-        // Load all matches
         addPlayersFromMatch(match1, 'Ind vs Aus 2013');
         addPlayersFromMatch(match2, 'Eng vs Ind 2002');
         addPlayersFromMatch(match3, 'SA vs Aus 2006');
 
-        console.log(`✅ Loaded ${PLAYER_DATABASE.length} player cards from database`);
+        console.log(`✅ Loaded ${PLAYER_DATABASE.length} player cards`);
 
         // ============================================================
         // GAME ENGINE
@@ -1125,8 +937,8 @@
             constructor() {
                 this.gameId = null;
                 this.players = {
-                    player1: { name: 'Player 1', cards: [], score: 0, playedCards: [], category: 'batsman' },
-                    player2: { name: 'Player 2', cards: [], score: 0, playedCards: [], category: 'batsman' }
+                    player1: { name: 'Player 1', cards: [], score: 0, playedCards: [] },
+                    player2: { name: 'Player 2', cards: [], score: 0, playedCards: [] }
                 };
                 this.currentRound = 0;
                 this.maxRounds = 11;
@@ -1153,33 +965,12 @@
                 return code;
             }
 
-            dealCards(category1, category2) {
-                // Filter players by category
-                let pool1 = PLAYER_DATABASE.filter(p => p.category === category1);
-                let pool2 = PLAYER_DATABASE.filter(p => p.category === category2);
+            dealCards() {
+                const shuffled = [...PLAYER_DATABASE].sort(() => Math.random() - 0.5);
+                const cardsPerPlayer = 11;
 
-                // If not enough players in category, use all players
-                if (pool1.length < 11) pool1 = PLAYER_DATABASE;
-                if (pool2.length < 11) pool2 = PLAYER_DATABASE;
-
-                // Shuffle and deal
-                const shuffled1 = [...pool1].sort(() => Math.random() - 0.5);
-                const shuffled2 = [...pool2].sort(() => Math.random() - 0.5);
-
-                this.players.player1.cards = shuffled1.slice(0, 11);
-                this.players.player2.cards = shuffled2.slice(0, 11);
-
-                // If either player has less than 11 cards, fill from all players
-                if (this.players.player1.cards.length < 11) {
-                    const all = [...PLAYER_DATABASE].sort(() => Math.random() - 0.5);
-                    const remaining = all.filter(p => !this.players.player1.cards.includes(p));
-                    this.players.player1.cards = [...this.players.player1.cards, ...remaining].slice(0, 11);
-                }
-                if (this.players.player2.cards.length < 11) {
-                    const all = [...PLAYER_DATABASE].sort(() => Math.random() - 0.5);
-                    const remaining = all.filter(p => !this.players.player2.cards.includes(p));
-                    this.players.player2.cards = [...this.players.player2.cards, ...remaining].slice(0, 11);
-                }
+                this.players.player1.cards = shuffled.slice(0, cardsPerPlayer);
+                this.players.player2.cards = shuffled.slice(cardsPerPlayer, cardsPerPlayer * 2);
 
                 this.players.player1.playedCards = [];
                 this.players.player2.playedCards = [];
@@ -1328,7 +1119,6 @@
                 this.opponentPlayer = null;
                 this.gameCode = null;
 
-                // DOM Elements
                 this.setupScreen = document.getElementById('setupScreen');
                 this.gameArea = document.getElementById('gameArea');
                 this.gameStatus = document.getElementById('gameStatus');
@@ -1353,7 +1143,6 @@
                 this.statSelector = document.getElementById('statSelector');
                 this.shareLink = document.getElementById('shareLink');
 
-                // Buttons
                 document.getElementById('createGameBtn').addEventListener('click', () => this.createGame());
                 document.getElementById('joinGameBtn').addEventListener('click', () => this.joinGame());
                 document.getElementById('playCardBtn').addEventListener('click', () => this.playCard());
@@ -1366,20 +1155,16 @@
             }
 
             createGame() {
-                const category = document.getElementById('playerCategory1').value;
                 const code = this.game.generateGameId();
                 this.currentPlayer = 'player1';
                 this.opponentPlayer = 'player2';
                 this.gameCode = code;
-                this.game.players.player1.category = category;
-                this.game.players.player2.category = document.getElementById('playerCategory2').value;
 
-                this.game.dealCards(category, 'batsman');
+                this.game.dealCards();
 
                 document.getElementById('gameCodeDisplay').style.display = 'block';
                 document.getElementById('gameCode').textContent = code;
                 
-                // Generate share link
                 const url = window.location.href.split('?')[0] + '?code=' + code;
                 this.shareLink.textContent = url;
                 
@@ -1394,15 +1179,12 @@
                     return;
                 }
 
-                const category = document.getElementById('playerCategory2').value;
                 this.game.gameId = code;
                 this.currentPlayer = 'player2';
                 this.opponentPlayer = 'player1';
                 this.gameCode = code;
-                this.game.players.player2.category = category;
-                this.game.players.player1.category = document.getElementById('playerCategory1').value;
 
-                this.game.dealCards('batsman', category);
+                this.game.dealCards();
 
                 document.getElementById('joinError').style.display = 'none';
                 this.enterGame();
@@ -1414,9 +1196,6 @@
                 this.game.gameState = 'playing';
                 this.myCardsContainer.style.display = 'block';
 
-                this.p1Name.textContent = '👤 Player 1 ' + this.getCategoryEmoji(this.game.players.player1.category);
-                this.p2Name.textContent = '👤 Player 2 ' + this.getCategoryEmoji(this.game.players.player2.category);
-
                 this.renderGame();
                 this.updateStatus();
 
@@ -1426,17 +1205,7 @@
                         this.game.selectCard(this.currentPlayer, 0);
                         this.renderGame();
                     }
-                }, 500);
-            }
-
-            getCategoryEmoji(category) {
-                const map = {
-                    'batsman': '🏏',
-                    'bowler': '🎯',
-                    'allrounder': '⭐',
-                    'wicketkeeper': '🧤'
-                };
-                return map[category] || '🏏';
+                }, 300);
             }
 
             renderGame() {
@@ -1477,12 +1246,16 @@
                     if (selectedIndex === index) div.classList.add('selected');
 
                     const isUsed = this.game.players[this.currentPlayer].playedCards.includes(card);
-                    const categoryEmoji = this.getCategoryEmoji(card.category);
 
                     div.innerHTML = `
-                        <div class="name">${categoryEmoji} ${card.name}</div>
-                        <div class="stats-mini">R:${card.runs} | SR:${card.strikeRate} | W:${card.wickets}</div>
-                        <div style="font-size:0.6em;color:#888;margin-top:2px;">${card.matchInfo}</div>
+                        <div class="name">${card.name}</div>
+                        <div class="stats-mini">
+                            R: <span class="stat-highlight">${card.runs}</span> | 
+                            SR: ${card.strikeRate} | 
+                            W: <span class="stat-highlight">${card.wickets}</span>
+                        </div>
+                        <div style="font-size:0.6em;color:#666;margin-top:2px;">${card.matchInfo}</div>
+                        ${selectedIndex === index ? '<div style="color:#ffd700;font-size:0.7em;margin-top:4px;">✅ SELECTED</div>' : ''}
                     `;
 
                     if (!isUsed) {
@@ -1495,6 +1268,7 @@
                     } else {
                         div.style.opacity = '0.3';
                         div.style.cursor = 'not-allowed';
+                        div.innerHTML += '<div style="color:#666;font-size:0.6em;margin-top:4px;">USED</div>';
                     }
 
                     this.myCards.appendChild(div);
@@ -1523,21 +1297,12 @@
             }
 
             createCardHTML(card) {
-                const categoryEmoji = this.getCategoryEmoji(card.category);
-                const categoryClass = {
-                    'batsman': 'category-batsman',
-                    'bowler': 'category-bowler',
-                    'allrounder': 'category-allrounder',
-                    'wicketkeeper': 'category-wicketkeeper'
-                }[card.category] || 'category-batsman';
-
                 return `
                     <div class="card">
-                        <div class="player-name-large">${categoryEmoji} ${card.name}</div>
-                        <span class="category-badge ${categoryClass}">${card.category.toUpperCase()}</span>
+                        <div class="player-name-large">${card.name}</div>
                         <div class="match-info">${card.matchInfo}</div>
                         <div class="stats-grid">
-                            <div class="stat-item"><span class="stat-label">Runs</span> <span class="stat-value">${card.runs}</span></div>
+                            <div class="stat-item"><span class="stat-label">Runs</span> <span class="stat-value highlight">${card.runs}</span></div>
                             <div class="stat-item"><span class="stat-label">SR</span> <span class="stat-value">${card.strikeRate}</span></div>
                             <div class="stat-item"><span class="stat-label">4s</span> <span class="stat-value">${card.fours}</span></div>
                             <div class="stat-item"><span class="stat-label">6s</span> <span class="stat-value">${card.sixes}</span></div>
@@ -1562,7 +1327,7 @@
 
                 const selectedCard = this.game.getSelectedCard(this.currentPlayer);
                 if (!selectedCard) {
-                    alert('Please select a card first!');
+                    alert('Please select a card from your hand first!');
                     return;
                 }
 
@@ -1572,7 +1337,7 @@
                     if (oppCards.length > 0) {
                         this.game.selectCard(this.opponentPlayer, 0);
                         this.renderGame();
-                        setTimeout(() => this.executeBattle(), 500);
+                        setTimeout(() => this.executeBattle(), 400);
                     }
                     return;
                 }
@@ -1616,12 +1381,9 @@
                     catches: 'Catches'
                 };
 
-                const cat1 = this.getCategoryEmoji(result.player1Card.category);
-                const cat2 = this.getCategoryEmoji(result.player2Card.category);
-
                 this.battleDetails.innerHTML = `
                     <div class="battle-player">
-                        <div style="font-weight:600;color:#ffd700;">${cat1} Player 1</div>
+                        <div style="font-weight:600;color:#ffd700;">Player 1</div>
                         <div style="font-size:1.1em;">${result.player1Card.name}</div>
                         <div class="stat-value ${result.winner === 'player1' ? 'win' : result.winner === 'player2' ? 'lose' : 'tie'}">
                             ${result.val1}
@@ -1630,7 +1392,7 @@
                     </div>
                     <div class="battle-vs">${winnerText}</div>
                     <div class="battle-player">
-                        <div style="font-weight:600;color:#ffd700;">${cat2} Player 2</div>
+                        <div style="font-weight:600;color:#ffd700;">Player 2</div>
                         <div style="font-size:1.1em;">${result.player2Card.name}</div>
                         <div class="stat-value ${result.winner === 'player2' ? 'win' : result.winner === 'player1' ? 'lose' : 'tie'}">
                             ${result.val2}
@@ -1689,7 +1451,11 @@
                     status += ' ⏳ Waiting for opponent...';
                 } else {
                     const selected = this.game.getSelectedCard(this.currentPlayer);
-                    status += selected ? ' ✅ Card selected! Choose stat and battle!' : ' 📋 Select a card from your hand!';
+                    if (selected) {
+                        status += ` ✅ ${selected.name} selected! Choose stat and battle!`;
+                    } else {
+                        status += ' 📋 Click a card from your hand to select it!';
+                    }
                 }
                 this.gameStatus.textContent = status;
             }
@@ -1717,7 +1483,7 @@
         }
 
         // ============================================================
-        // INITIALIZE GAME
+        // INITIALIZE
         // ============================================================
         document.addEventListener('DOMContentLoaded', () => {
             const gameUI = new GameUI();
