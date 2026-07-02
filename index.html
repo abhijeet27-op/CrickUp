@@ -196,7 +196,8 @@ button.ghost{
 
   <div id="screen-over" class="panel" style="display:none; text-align:center;">
     <div class="overlay-msg" id="over-msg">—</div>
-    <button class="ghost" onclick="location.reload()">Start a New Match</button>
+    <button class="ghost" id="rematch-btn" onclick="requestRematch()">Start a New Match</button>
+    <div class="status-line" id="over-status" style="margin-top:10px;"></div>
   </div>
 </div>
 
@@ -454,13 +455,28 @@ function buildView(perspective, lastRound){
 
 function handleData(msg){
   if(!isHost) {
-    if(msg.type==='sync'){ renderFromState(msg.state); if(document.getElementById('screen-game').style.display==='none') show('screen-game'); }
+    if(msg.type==='sync'){
+      renderFromState(msg.state);
+      // Only force the game screen open for a *live* state (fresh deal / rematch).
+      // A gameOver state already switched to screen-over inside renderFromState above —
+      // re-showing screen-game here was the bug that hid the result from the non-host player.
+      if(!msg.state.gameOver){
+        const gameEl = document.getElementById('screen-game');
+        if(gameEl.style.display !== 'block') show('screen-game');
+      }
+    }
     return;
   }
   // host receives peer actions
   if(msg.type==='pick' && turn==='peer' && !gameOver && !roundLock){
     const round = resolveRound(msg.category);
     sendSync(round);
+  }
+  if(msg.type==='rematch'){
+    dealCards();
+    turn = 'host';
+    sendSync();
+    show('screen-game');
   }
 }
 
@@ -507,6 +523,7 @@ function renderFromState(view){
   const ti = document.getElementById('turn-indicator');
   if(view.gameOver){
     show('screen-over');
+    document.getElementById('over-status').textContent = '';
     const msg = view.iWon==='tie' ? "IT'S A TIE" : (view.iWon ? 'YOU WIN THE MATCH' : 'OPPONENT WINS THE MATCH');
     document.getElementById('over-msg').textContent = msg;
     return;
@@ -547,6 +564,23 @@ function pickCategory(key){
     sendSync(round);
   } else {
     if(conn && conn.open) conn.send({type:'pick', category:key});
+  }
+}
+
+// Rematch reuses the existing peer connection — no reload, no re-sharing codes.
+// Whoever clicks it notifies the other side automatically.
+function requestRematch(){
+  document.getElementById('over-status').textContent = '';
+  if(isHost){
+    dealCards();
+    turn = 'host';
+    sendSync();
+    show('screen-game');
+  } else {
+    if(conn && conn.open){
+      conn.send({type:'rematch'});
+      document.getElementById('over-status').innerHTML = '<span class="spin"></span>Starting a new match…';
+    }
   }
 }
 </script>
