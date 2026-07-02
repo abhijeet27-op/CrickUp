@@ -159,6 +159,10 @@ button.ghost{
         <h3>Join a Match</h3>
         <p>Enter the code your opponent shared with you.</p>
       </div>
+      <div class="choice-card" onclick="startAI()">
+        <h3>Play vs Computer</h3>
+        <p>No opponent handy? Battle the AI right here, no code needed.</p>
+      </div>
     </div>
     <div id="join-box" style="display:none; max-width:320px; margin:22px auto 0;">
       <input type="text" id="join-code" placeholder="ENTER CODE" maxlength="6">
@@ -177,7 +181,7 @@ button.ghost{
       <div class="scoreboard">
         <div>YOU<br><span class="deckcount" id="my-score">0</span> pts · <span id="my-count">11</span> cards left</div>
         <div style="text-align:center; font-family:'Bebas Neue',sans-serif; font-size:22px; color:var(--gold);">VS</div>
-        <div style="text-align:right;">OPPONENT<br><span class="deckcount" id="opp-score">0</span> pts · <span id="opp-count">11</span> cards left</div>
+        <div style="text-align:right;"><span id="opp-label">OPPONENT</span><br><span class="deckcount" id="opp-score">0</span> pts · <span id="opp-count">11</span> cards left</div>
       </div>
       <div id="turn-indicator" class="banner tie">—</div>
       <div class="arena">
@@ -186,7 +190,7 @@ button.ghost{
           <div id="my-card-slot"></div>
         </div>
         <div>
-          <div class="slot-label">Opponent's Card</div>
+          <div class="slot-label" id="opp-slot-label">Opponent's Card</div>
           <div id="opp-card-slot"><div class="card-back">FACE DOWN</div></div>
         </div>
       </div>
@@ -289,11 +293,18 @@ const CATS = [
 ];
 
 /* ---------------- STATE ---------------- */
-let peer, conn, isHost=false;
+let peer, conn, isHost=false, isAI=false;
 let hostHand=[], peerHand=[], turn='host', gameOver=false;
 let hostScore=0, peerScore=0, finalWinnerGlobal=null, roundLock=false;
 let byId = {}; CARDS.forEach(c=>byId[c.id]=c);
 const REVEAL_MS = 2200; // how long a resolved round stays on screen before the next one opens up
+
+// Precompute the best-ever value in each category so the AI can judge how strong its
+// own card is, without ever looking at the human's hidden card — keeps it fair.
+const MAX_BY_CAT = {};
+CATS.forEach(cat=>{
+  MAX_BY_CAT[cat.key] = Math.max(...CARDS.map(c => cat.key==='fielding' ? (c.catches+c.stumpings) : c[cat.key]));
+});
 
 function shuffle(arr){
   const a=arr.slice();
@@ -325,7 +336,6 @@ function startHost(){
     conn = c;
     conn.on('open', ()=>{
       dealCards();
-      turn='host';
       sendSync();
       renderGame();
       show('screen-game');
@@ -363,6 +373,7 @@ function dealCards(){
   peerHand = pool.slice(11,22);
   hostScore = 0; peerScore = 0;
   gameOver = false; finalWinnerGlobal = null; roundLock = false;
+  turn = Math.random() < 0.5 ? 'host' : 'peer'; // randomize who picks first, every match
 }
 
 function statVal(cardId, key){
@@ -435,7 +446,7 @@ function showGameOver(perspective, winner, hostScoreVal, peerScoreVal){
   document.getElementById('opp-score').textContent = oppScore;
   document.getElementById('over-status').textContent = '';
   const iWon = winner==='tie' ? 'tie' : (winner===perspective);
-  document.getElementById('over-msg').textContent = iWon==='tie' ? "IT'S A TIE" : (iWon ? 'YOU WIN THE MATCH' : 'OPPONENT WINS THE MATCH');
+  document.getElementById('over-msg').textContent = iWon==='tie' ? "IT'S A TIE" : (iWon ? 'YOU WIN THE MATCH' : `${isAI?'THE COMPUTER':'OPPONENT'} WINS THE MATCH`);
   show('screen-over');
 }
 
@@ -444,6 +455,7 @@ function advanceAfterReveal(){
   const peerView = buildView('peer', null);
   if(conn && conn.open) conn.send({type:'sync', state:peerView});
   renderGame(null);
+  maybeAITurn();
 }
 
 function buildView(perspective, lastRound){
@@ -489,7 +501,6 @@ function handleData(msg){
   }
   if(msg.type==='rematch'){
     dealCards();
-    turn = 'host';
     sendSync();
     show('screen-game');
   }
@@ -538,8 +549,8 @@ function renderFromState(view){
   const ti = document.getElementById('turn-indicator');
   ti.className = 'banner ' + (view.turn==='you' ? 'win':'tie');
   ti.textContent = view.reveal
-    ? (view.reveal.outcome==='tie' ? "Tied — no point awarded…" : (view.reveal.outcome==='win' ? 'You won that round!' : 'Opponent won that round…'))
-    : (view.turn==='you' ? 'Your call — pick a category to challenge' : "Opponent is choosing a category…");
+    ? (view.reveal.outcome==='tie' ? "Tied — no point awarded…" : (view.reveal.outcome==='win' ? 'You won that round!' : `${isAI?'The computer':'Opponent'} won that round…`))
+    : (view.turn==='you' ? 'Your call — pick a category to challenge' : `${isAI?'The computer is choosing':'Opponent is choosing'} a category…`);
 
   document.getElementById('my-card-slot').innerHTML = cardHTML(view.myTopCardId, {
     pickable: view.turn==='you' && !view.reveal,
@@ -559,7 +570,7 @@ function renderFromState(view){
 function logRound(reveal){
   const cat = CATS.find(c=>c.key===reveal.category).label;
   const log = document.getElementById('round-log');
-  const outcomeTxt = reveal.outcome==='win' ? 'You won the point' : reveal.outcome==='lose' ? 'Opponent won the point' : 'Tied — no point awarded';
+  const outcomeTxt = reveal.outcome==='win' ? 'You won the point' : reveal.outcome==='lose' ? `${isAI?'The computer':'Opponent'} won the point` : 'Tied — no point awarded';
   const entry = document.createElement('div');
   entry.innerHTML = `<b>${cat}:</b> you ${reveal.myVal===null?'—':reveal.myVal} vs opp ${reveal.oppVal===null?'—':reveal.oppVal} — ${outcomeTxt}`;
   log.prepend(entry);
@@ -581,15 +592,50 @@ function requestRematch(){
   document.getElementById('over-status').textContent = '';
   if(isHost){
     dealCards();
-    turn = 'host';
     sendSync();
     show('screen-game');
+    maybeAITurn();
   } else {
     if(conn && conn.open){
       conn.send({type:'rematch'});
       document.getElementById('over-status').innerHTML = '<span class="spin"></span>Starting a new match…';
     }
   }
+}
+
+/* ---------------- AI OPPONENT ---------------- */
+function startAI(){
+  isHost = true; isAI = true; conn = null; peer = null;
+  document.getElementById('opp-label').textContent = 'COMPUTER';
+  document.getElementById('opp-slot-label').textContent = "Computer's Card";
+  dealCards();
+  show('screen-game');
+  renderGame();
+  maybeAITurn();
+}
+
+// The AI never sees the human's card. It just judges how strong its own top card is,
+// relative to the best that stat ever gets across the whole 66-card set, and challenges
+// on whichever category it happens to be holding the strongest hand in.
+function chooseAICategory(){
+  const card = byId[peerHand[0]];
+  let best = CATS[0].key, bestScore = -1;
+  CATS.forEach(cat=>{
+    const val = cat.key==='fielding' ? (card.catches + card.stumpings) : card[cat.key];
+    const max = MAX_BY_CAT[cat.key] || 1;
+    const norm = val / max;
+    if(norm > bestScore){ bestScore = norm; best = cat.key; }
+  });
+  return best;
+}
+
+function maybeAITurn(){
+  if(!isAI || turn!=='peer' || gameOver || roundLock) return;
+  setTimeout(()=>{
+    if(!isAI || turn!=='peer' || gameOver || roundLock) return; // still true after the "thinking" pause
+    const round = resolveRound(chooseAICategory());
+    sendSync(round);
+  }, 900 + Math.random()*700);
 }
 </script>
 </body>
