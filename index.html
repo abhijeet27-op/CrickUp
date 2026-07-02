@@ -412,8 +412,31 @@ function sendSync(lastRound){
 
   if(lastRound){
     roundLock = true;
-    setTimeout(advanceAfterReveal, REVEAL_MS);
+    setTimeout(()=>{
+      if(gameOver){ finishMatch(); } else { advanceAfterReveal(); }
+    }, REVEAL_MS);
   }
+}
+
+// Sent exactly once, straight to both clients, fully self-contained (the peer has no
+// authoritative score of its own to compute this from). This replaces relying on a
+// 'gameOver' flag buried inside the regular sync state, which was the source of the
+// one-sided notification bug — the two sides could disagree about when to act on it.
+function finishMatch(){
+  const winner = finalWinnerGlobal;
+  if(conn && conn.open) conn.send({type:'gameover', winner, hostScore, peerScore});
+  showGameOver('host', winner, hostScore, peerScore);
+}
+
+function showGameOver(perspective, winner, hostScoreVal, peerScoreVal){
+  const myScore = perspective==='host' ? hostScoreVal : peerScoreVal;
+  const oppScore = perspective==='host' ? peerScoreVal : hostScoreVal;
+  document.getElementById('my-score').textContent = myScore;
+  document.getElementById('opp-score').textContent = oppScore;
+  document.getElementById('over-status').textContent = '';
+  const iWon = winner==='tie' ? 'tie' : (winner===perspective);
+  document.getElementById('over-msg').textContent = iWon==='tie' ? "IT'S A TIE" : (iWon ? 'YOU WIN THE MATCH' : 'OPPONENT WINS THE MATCH');
+  show('screen-over');
 }
 
 function advanceAfterReveal(){
@@ -439,16 +462,11 @@ function buildView(perspective, lastRound){
       outcome: lastRound.winnerSide==='tie' ? 'tie' : (lastRound.winnerSide===perspective ? 'win':'lose')
     };
   }
-  let iWon = null;
-  if(gameOver){
-    iWon = finalWinnerGlobal==='tie' ? 'tie' : (finalWinnerGlobal===perspective);
-  }
   return {
     myCount: my.length, oppCount: opp.length,
     myScore, oppScore,
     myTopCardId: my[0] ?? null,
     turn: turn===perspective ? 'you':'opp',
-    gameOver, iWon,
     reveal
   };
 }
@@ -457,13 +475,10 @@ function handleData(msg){
   if(!isHost) {
     if(msg.type==='sync'){
       renderFromState(msg.state);
-      // Only force the game screen open for a *live* state (fresh deal / rematch).
-      // A gameOver state already switched to screen-over inside renderFromState above —
-      // re-showing screen-game here was the bug that hid the result from the non-host player.
-      if(!msg.state.gameOver){
-        const gameEl = document.getElementById('screen-game');
-        if(gameEl.style.display !== 'block') show('screen-game');
-      }
+      const gameEl = document.getElementById('screen-game');
+      if(gameEl.style.display !== 'block') show('screen-game');
+    } else if(msg.type==='gameover'){
+      showGameOver('peer', msg.winner, msg.hostScore, msg.peerScore);
     }
     return;
   }
@@ -521,13 +536,6 @@ function renderFromState(view){
   document.getElementById('opp-score').textContent = view.oppScore;
 
   const ti = document.getElementById('turn-indicator');
-  if(view.gameOver){
-    show('screen-over');
-    document.getElementById('over-status').textContent = '';
-    const msg = view.iWon==='tie' ? "IT'S A TIE" : (view.iWon ? 'YOU WIN THE MATCH' : 'OPPONENT WINS THE MATCH');
-    document.getElementById('over-msg').textContent = msg;
-    return;
-  }
   ti.className = 'banner ' + (view.turn==='you' ? 'win':'tie');
   ti.textContent = view.reveal
     ? (view.reveal.outcome==='tie' ? "Tied — no point awarded…" : (view.reveal.outcome==='win' ? 'You won that round!' : 'Opponent won that round…'))
