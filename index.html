@@ -321,6 +321,25 @@ function show(id){ ['screen-landing','screen-wait','screen-game','screen-over'].
 /* ---------------- LOBBY ---------------- */
 function showJoin(){ document.getElementById('join-box').style.display='block'; }
 
+// STUN alone (PeerJS's default) only helps two browsers discover each other's public IP —
+// it does nothing if a direct connection can't actually be made (common on mobile data,
+// hotel/office wifi, or strict NATs). That's the "stuck at connecting forever, no error"
+// symptom: ICE negotiation just never completes. Adding a TURN relay as a fallback lets
+// the connection route through a relay server when a direct path isn't possible.
+const ICE_CONFIG = {
+  iceServers: [
+    { urls: 'stun:stun.l.google.com:19302' },
+    { urls: 'turn:openrelay.metered.ca:80', username: 'openrelayproject', credential: 'openrelayproject' },
+    { urls: 'turn:openrelay.metered.ca:443', username: 'openrelayproject', credential: 'openrelayproject' },
+    { urls: 'turn:openrelay.metered.ca:443?transport=tcp', username: 'openrelayproject', credential: 'openrelayproject' }
+  ]
+};
+const CONNECT_TIMEOUT_MS = 15000;
+
+function retryPanel(){
+  return ' <button class="ghost" style="margin-top:10px;" onclick="location.reload()">Cancel &amp; try again</button>';
+}
+
 function startHost(){
   isHost = true;
   const code = randCode();
@@ -328,13 +347,15 @@ function startHost(){
   document.getElementById('wait-title').textContent = 'Hosting a match';
   document.getElementById('wait-code').textContent = code;
   document.getElementById('wait-status').innerHTML = '<span class="spin"></span>Waiting for opponent to connect…';
+  let connected = false;
 
-  peer = new Peer('ct-'+code, {debug:0});
+  peer = new Peer('ct-'+code, {debug:1, config: ICE_CONFIG});
   peer.on('open', ()=>{});
-  peer.on('error', e=>{ document.getElementById('wait-status').textContent = 'Connection error: '+e.type+'. Refresh and try again.'; });
+  peer.on('error', e=>{ document.getElementById('wait-status').innerHTML = 'Connection error: '+e.type+'.'+retryPanel(); });
   peer.on('connection', c=>{
     conn = c;
     conn.on('open', ()=>{
+      connected = true;
       dealCards();
       sendSync();
       renderGame();
@@ -342,7 +363,13 @@ function startHost(){
     });
     conn.on('data', handleData);
     conn.on('close', ()=>{ alert('Opponent disconnected.'); });
+    conn.on('error', e=>{ document.getElementById('wait-status').innerHTML = 'Connection dropped while linking up.'+retryPanel(); });
   });
+  setTimeout(()=>{
+    if(!connected){
+      document.getElementById('wait-status').innerHTML = 'Still waiting — double-check your opponent typed the code correctly, and that neither of you is on a network that blocks peer-to-peer connections (some office/school wifi does).'+retryPanel();
+    }
+  }, CONNECT_TIMEOUT_MS);
 }
 
 function startJoin(){
@@ -353,18 +380,27 @@ function startJoin(){
   document.getElementById('wait-title').textContent = 'Joining match';
   document.getElementById('wait-code').textContent = code;
   document.getElementById('wait-status').innerHTML = '<span class="spin"></span>Connecting…';
+  let connected = false;
 
-  peer = new Peer({debug:0});
+  peer = new Peer({debug:1, config: ICE_CONFIG});
   peer.on('open', ()=>{
     conn = peer.connect('ct-'+code, {reliable:true});
     conn.on('open', ()=>{
+      connected = true;
       document.getElementById('wait-status').innerHTML = '<span class="spin"></span>Connected — waiting for the deal…';
     });
     conn.on('data', handleData);
     conn.on('close', ()=>{ alert('Opponent disconnected.'); });
+    conn.on('error', e=>{ document.getElementById('wait-status').innerHTML = 'Connection dropped while linking up.'+retryPanel(); });
   });
-  peer.on('error', e=>{ document.getElementById('wait-status').textContent = 'Could not connect: '+e.type+'. Check the code and try again.'; });
+  peer.on('error', e=>{ document.getElementById('wait-status').innerHTML = 'Could not connect: '+e.type+'. Check the code and try again.'+retryPanel(); });
+  setTimeout(()=>{
+    if(!connected){
+      document.getElementById('wait-status').innerHTML = 'Still trying to connect — this can take longer on mobile data or restrictive wifi. Make sure the code is correct and your opponent\'s tab is still open.'+retryPanel();
+    }
+  }, CONNECT_TIMEOUT_MS);
 }
+
 
 /* ---------------- GAME LOGIC (host-authoritative) ---------------- */
 function dealCards(){
