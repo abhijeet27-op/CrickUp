@@ -297,7 +297,7 @@ let peer, conn, isHost=false, isAI=false;
 let hostHand=[], peerHand=[], turn='host', gameOver=false;
 let hostScore=0, peerScore=0, finalWinnerGlobal=null, roundLock=false;
 let byId = {}; CARDS.forEach(c=>byId[c.id]=c);
-const REVEAL_MS = 2200; // how long a resolved round stays on screen before the next one opens up
+const REVEAL_MS = 11000; // how long a resolved round stays on screen before the next one opens up
 
 // Precompute the best-ever value in each category so the AI can judge how strong its
 // own card is, without ever looking at the human's hidden card — keeps it fair.
