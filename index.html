@@ -141,15 +141,41 @@ button.ghost{
 .log b{color:var(--gold-bright);}
 
 .overlay-msg{text-align:center; font-family:'Bebas Neue',sans-serif; font-size:40px; color:var(--gold-bright); margin:20px 0;}
+
+.mode-switch{display:flex; gap:10px; justify-content:center; margin-bottom:16px;}
+.mode-btn{background:transparent; border:1px solid var(--line); color:var(--cream-dim); font-family:'Space Mono',monospace; font-size:12px; padding:9px 16px; border-radius:3px; cursor:pointer;}
+.mode-btn.active{background:var(--gold); color:var(--ink); border-color:var(--gold); font-weight:700;}
+.squad-list{max-height:440px; overflow-y:auto; margin:0 0 18px; padding-right:4px;}
+.squad-row{display:flex; justify-content:space-between; align-items:center; gap:10px; padding:11px 14px; border:1px solid var(--line); border-radius:4px; margin-bottom:8px; cursor:pointer; transition:.12s;}
+.squad-row:hover{border-color:var(--gold-bright);}
+.squad-row.selected{background:rgba(201,162,75,0.18); border-color:var(--gold);}
+.squad-row .name{font-weight:600; font-size:14px;}
+.squad-row .meta{font-size:11px; color:var(--cream-dim); font-family:'Space Mono',monospace; margin-top:2px;}
+.squad-row .figs{font-family:'Space Mono',monospace; font-size:11.5px; color:var(--gold-bright); text-align:right; max-width:180px;}
+.order-row{display:flex; align-items:center; gap:10px; padding:9px 14px; border:1px solid var(--line); border-radius:4px; margin-bottom:6px;}
+.order-row .pos{font-family:'Space Mono',monospace; color:var(--gold); width:22px; flex-shrink:0;}
+.order-row .name{flex:1; font-size:14px;}
+.order-row .figs{font-family:'Space Mono',monospace; font-size:11.5px; color:var(--cream-dim); margin-right:6px;}
+.order-row button{background:transparent; border:1px solid var(--line); color:var(--cream); cursor:pointer; border-radius:3px; padding:3px 9px; font-family:'Space Mono',monospace;}
+.order-row button:disabled{opacity:.25; cursor:default;}
+.plan-row{display:flex; align-items:center; gap:10px; padding:9px 14px; border:1px solid var(--line); border-radius:4px; margin-bottom:6px;}
+.plan-row .name{flex:1; font-size:14px;}
+.plan-row .meta{font-family:'Space Mono',monospace; font-size:11px; color:var(--cream-dim);}
+.plan-row input{width:56px; background:rgba(0,0,0,.25); border:1px solid var(--gold); color:var(--gold-bright); font-family:'Space Mono',monospace; text-align:center; border-radius:3px; padding:5px; font-size:14px;}
 </style>
 </head>
 <body>
 <div class="wrap">
   <div class="eyebrow">A Two-Player Statistics Duel</div>
   <h1 class="hero-title">INNINGS <span>TRUMPS</span></h1>
-  <p class="hero-sub">66 real match-day performances, pulled from three famous ODI run-chases and last-wicket thrillers. Deal eleven cards each, pick your best stat, and see who owns the scorecard.</p>
+  <p class="hero-sub">66 real match-day performances, pulled from three famous ODI run-chases and last-wicket thrillers.</p>
 
   <div id="screen-landing" class="panel">
+    <div class="mode-switch">
+      <button class="mode-btn active" id="mode-btn-duel" onclick="setGameMode('duel')">Quick Duel</button>
+      <button class="mode-btn" id="mode-btn-squad" onclick="setGameMode('squad')">Squad Battle</button>
+    </div>
+    <p class="status-line" id="mode-desc" style="margin-bottom:20px;">Classic Top Trumps — 11 cards each, pick a stat, highest wins.</p>
     <div class="choice-row">
       <div class="choice-card" onclick="startHost()">
         <h3>Host a Match</h3>
@@ -202,6 +228,49 @@ button.ghost{
     <div class="overlay-msg" id="over-msg">—</div>
     <button class="ghost" id="rematch-btn" onclick="requestRematch()">Start a New Match</button>
     <div class="status-line" id="over-status" style="margin-top:10px;"></div>
+  </div>
+
+  <div id="screen-squad-xi" class="panel" style="display:none;">
+    <div class="eyebrow">Squad Battle — Step 1</div>
+    <h2 style="text-align:center; margin-bottom:6px; font-family:'Bebas Neue',sans-serif; font-size:32px;">Pick Your Best XI</h2>
+    <p class="hero-sub" style="margin:0 auto 16px;">You've been dealt 15 players. Choose exactly 11 — the rest sit out.</p>
+    <div class="status-line" id="squad-xi-count" style="margin-bottom:14px; font-size:16px; color:var(--gold-bright); text-align:center;">Selected: 0 / 11</div>
+    <div id="squad-xi-list" class="squad-list"></div>
+    <button class="primary" id="squad-xi-confirm" onclick="confirmXI()" disabled>Confirm XI</button>
+    <div class="status-line" id="squad-xi-status" style="margin-top:14px; text-align:center;"></div>
+  </div>
+
+  <div id="screen-squad-toss" class="panel" style="display:none; text-align:center;">
+    <div class="eyebrow">Squad Battle — Toss</div>
+    <div class="overlay-msg" id="toss-msg">Flipping the coin…</div>
+    <div id="toss-choice-row" class="choice-row" style="display:none; max-width:420px; margin:20px auto 0;">
+      <div class="choice-card" onclick="submitTossChoice('bat')"><h3>Bat First</h3></div>
+      <div class="choice-card" onclick="submitTossChoice('bowl')"><h3>Bowl First</h3></div>
+    </div>
+    <div class="status-line" id="toss-status" style="margin-top:14px;"></div>
+  </div>
+
+  <div id="screen-squad-setup" class="panel" style="display:none;">
+    <div class="eyebrow" id="setup-eyebrow" style="text-align:center;">Squad Battle — Innings 1</div>
+    <h2 style="text-align:center; margin-bottom:4px; font-family:'Bebas Neue',sans-serif; font-size:28px;" id="setup-title">Set Your Batting Order</h2>
+    <p class="status-line" id="setup-target" style="text-align:center; margin-bottom:14px; color:var(--gold-bright);"></p>
+    <div id="setup-body"></div>
+    <button class="ghost" id="setup-auto" style="margin-top:14px; width:100%;" onclick="autoFillSetup()">Auto-Fill Suggestion</button>
+    <button class="primary" id="setup-confirm" onclick="confirmSetup()">Confirm</button>
+    <div class="status-line" id="setup-status" style="margin-top:14px; text-align:center;"></div>
+  </div>
+
+  <div id="screen-squad-break" class="panel" style="display:none;">
+    <div class="eyebrow" style="text-align:center;">Innings Complete</div>
+    <div id="break-body"></div>
+    <button class="primary" onclick="continueToNextPhase()">Continue</button>
+  </div>
+
+  <div id="screen-squad-result" class="panel" style="display:none; text-align:center;">
+    <div class="eyebrow">Squad Battle — Final Result</div>
+    <div class="overlay-msg" id="squad-result-msg">—</div>
+    <div id="squad-result-body" style="text-align:left; margin:20px 0;"></div>
+    <button class="ghost" onclick="requestSquadRematch()">Play Another Squad Battle</button>
   </div>
 </div>
 
@@ -294,6 +363,7 @@ const CATS = [
 
 /* ---------------- STATE ---------------- */
 let peer, conn, isHost=false, isAI=false;
+let gameMode = 'duel'; // 'duel' | 'squad'
 let hostHand=[], peerHand=[], turn='host', gameOver=false;
 let hostScore=0, peerScore=0, finalWinnerGlobal=null, roundLock=false;
 let byId = {}; CARDS.forEach(c=>byId[c.id]=c);
@@ -306,6 +376,27 @@ CATS.forEach(cat=>{
   MAX_BY_CAT[cat.key] = Math.max(...CARDS.map(c => cat.key==='fielding' ? (c.catches+c.stumpings) : c[cat.key]));
 });
 
+/* ---------------- SQUAD BATTLE: hidden bowling data ---------------- */
+// Economy and overs bowled were dropped from the visible Quick Duel cards, but Squad
+// Battle's match simulator needs them internally to judge bowling quality. Only ids
+// that actually bowled in their recorded match appear here; everyone else is treated
+// as an occasional part-timer by the simulator (see wicketChance/bowlerEconomyFor).
+const BOWL_ECON = {3:4.40,7:5.70,8:5.40,9:6.25,10:7.06,11:7.00,14:7.63,17:6.00,19:6.50,20:4.60,21:6.50,22:5.10,28:23.00,29:3.80,30:6.40,31:4.70,32:6.33,33:6.95,34:6.33,36:6.75,39:9.33,41:4.60,42:7.00,43:6.20,44:6.60,48:6.86,49:8.33,50:8.68,52:6.70,53:9.00,54:11.30,56:4.20,60:11.67,63:8.00,64:9.20,65:8.89,66:8.40};
+const BOWL_OVERS = {3:5.0,7:10.0,8:10.0,9:8.0,10:8.5,11:8.0,14:8.0,17:2.0,19:10.0,20:10.0,21:10.0,22:10.0,28:1.0,29:10.0,30:10.0,31:10.0,32:9.0,33:9.5,34:3.0,36:4.0,39:3.0,41:10.0,42:10.0,43:10.0,44:10.0,48:7.0,49:9.0,50:7.83,52:10.0,53:6.0,54:10.0,56:5.0,60:6.0,63:10.0,64:10.0,65:9.0,66:10.0};
+
+// Host-authoritative squad-mode state
+let squadHost=[], squadPeer=[], xiHost=null, xiPeer=null;
+let tossWinner=null, battingTeamSide=null;
+let ordersBySide={host:null,peer:null}, plansBySide={host:null,peer:null};
+let inningsResults=[];
+let currentInningsNum=0, currentBattingSide=null, currentBowlingSide=null, currentTarget=null;
+let pendingHostAction=null, pendingSquadSummary=null;
+// Peer-local squad state (peer never sees host's squad/XI, same privacy model as Quick Duel)
+let mySquad=[], myXI=null, selectedXISet=new Set();
+let pendingSetup=null, pendingMatchResultData=null;
+// Shared UI working-state for whichever setup screen is currently open locally
+let currentSetupRole=null, currentSetupXI=null, workingOrder=[], workingPlan={};
+
 function shuffle(arr){
   const a=arr.slice();
   for(let i=a.length-1;i>0;i--){const j=Math.floor(Math.random()*(i+1));[a[i],a[j]]=[a[j],a[i]];}
@@ -316,7 +407,16 @@ function randCode(){
   let s=''; for(let i=0;i<6;i++) s+=chars[Math.floor(Math.random()*chars.length)];
   return s;
 }
-function show(id){ ['screen-landing','screen-wait','screen-game','screen-over'].forEach(s=>document.getElementById(s).style.display = s===id ? 'block':'none'); }
+function show(id){ ['screen-landing','screen-wait','screen-game','screen-over','screen-squad-xi','screen-squad-toss','screen-squad-setup','screen-squad-break','screen-squad-result'].forEach(s=>document.getElementById(s).style.display = s===id ? 'block':'none'); }
+
+function setGameMode(mode){
+  gameMode = mode;
+  document.getElementById('mode-btn-duel').classList.toggle('active', mode==='duel');
+  document.getElementById('mode-btn-squad').classList.toggle('active', mode==='squad');
+  document.getElementById('mode-desc').textContent = mode==='duel'
+    ? 'Classic Top Trumps — 11 cards each, pick a stat, highest wins.'
+    : 'Draft 15, pick your best XI, set the batting order and bowling attack, then simulate a full 50-over match.';
+}
 
 /* ---------------- LOBBY ---------------- */
 function showJoin(){ document.getElementById('join-box').style.display='block'; }
@@ -356,10 +456,14 @@ function startHost(){
     conn = c;
     conn.on('open', ()=>{
       connected = true;
-      dealCards();
-      sendSync();
-      renderGame();
-      show('screen-game');
+      if(gameMode==='squad'){
+        startSquadMatchAsHost();
+      } else {
+        dealCards();
+        sendSync();
+        renderGame();
+        show('screen-game');
+      }
     });
     conn.on('data', handleData);
     conn.on('close', ()=>{ alert('Opponent disconnected.'); });
@@ -527,6 +631,23 @@ function handleData(msg){
       if(gameEl.style.display !== 'block') show('screen-game');
     } else if(msg.type==='gameover'){
       showGameOver('peer', msg.winner, msg.hostScore, msg.peerScore);
+    } else if(msg.type==='squad-deal'){
+      mySquad = msg.squad; myXI = null; selectedXISet = new Set();
+      renderSquadXIScreen(mySquad);
+      show('screen-squad-xi');
+    } else if(msg.type==='squad-toss'){
+      showTossUI(msg.winner);
+    } else if(msg.type==='squad-need-setup'){
+      if(msg.inningsNum===1){
+        renderSetupScreen(msg.role, msg.target, msg.inningsNum, myXI);
+        show('screen-squad-setup');
+      } else {
+        pendingSetup = {inningsNum:msg.inningsNum, role:msg.role, target:msg.target};
+      }
+    } else if(msg.type==='squad-innings-result'){
+      renderInningsBreak('peer', msg.result);
+    } else if(msg.type==='squad-match-result'){
+      pendingMatchResultData = msg.summary;
     }
     return;
   }
@@ -534,11 +655,21 @@ function handleData(msg){
   if(msg.type==='pick' && turn==='peer' && !gameOver && !roundLock){
     const round = resolveRound(msg.category);
     sendSync(round);
-  }
-  if(msg.type==='rematch'){
+  } else if(msg.type==='rematch'){
     dealCards();
     sendSync();
     show('screen-game');
+  } else if(msg.type==='squad-xi'){
+    xiPeer = msg.xi;
+    checkBothXIReady();
+  } else if(msg.type==='squad-toss-choice'){
+    setBattingTeam(msg.choice==='bat' ? 'peer' : 'host');
+  } else if(msg.type==='squad-batting-order'){
+    submitOrder('peer', msg.order);
+  } else if(msg.type==='squad-bowling-plan'){
+    submitPlan('peer', msg.plan);
+  } else if(msg.type==='squad-rematch'){
+    startSquadMatchAsHost();
   }
 }
 
@@ -642,6 +773,10 @@ function requestRematch(){
 /* ---------------- AI OPPONENT ---------------- */
 function startAI(){
   isHost = true; isAI = true; conn = null; peer = null;
+  if(gameMode==='squad'){
+    startSquadMatchAsHost();
+    return;
+  }
   document.getElementById('opp-label').textContent = 'COMPUTER';
   document.getElementById('opp-slot-label').textContent = "Computer's Card";
   dealCards();
@@ -672,6 +807,474 @@ function maybeAITurn(){
     const round = resolveRound(chooseAICategory());
     sendSync(round);
   }, 900 + Math.random()*700);
+}
+
+/* =====================================================================
+   SQUAD BATTLE — draft 15, pick an XI, toss, set batting order / bowling
+   attack, simulate a full 50-over (300-ball) match.
+
+   This is a simplified statistical simulator, not a rigorous model: each
+   ball's outcome is drawn from a probability distribution shaped by the
+   batter's historical strike rate and the bowler's historical economy;
+   each ball's wicket chance is shaped by the bowler's historical
+   balls-per-wicket rate. Players with no recorded bowling in their one
+   historical match are treated as occasional part-timers (weak economy,
+   low wicket threat) rather than excluded — the game still lets you
+   throw the ball to anyone in your XI, same as real captains do.
+   ===================================================================== */
+
+/* ---- simulation core ---- */
+function bowlerEconomyFor(id){ return BOWL_ECON[id] ?? 6.8; }
+
+function effectiveSR(batterId, bowlerId){
+  const bat = byId[batterId];
+  const econFactor = 6.4 / Math.max(bowlerEconomyFor(bowlerId), 3);
+  return bat.sr * econFactor;
+}
+
+function wicketChance(bowlerId, batterId){
+  const overs = BOWL_OVERS[bowlerId] ?? 0;
+  const wkts = byId[bowlerId].wkts;
+  let ballsPerWkt;
+  if(overs>0 && wkts>0) ballsPerWkt = (overs*6)/wkts;
+  else if(overs>0) ballsPerWkt = 140;   // bowled historically but wicketless — weak threat
+  else ballsPerWkt = 220;               // never recorded bowling at all — part-timer
+  const bat = byId[batterId];
+  const solidity = bat.runs>=50 ? 0.85 : (bat.runs<=5 ? 1.15 : 1.0);
+  return Math.max(0.01, Math.min(0.18, (1/ballsPerWkt) * solidity));
+}
+
+function ballOutcome(effSR){
+  const sr = Math.max(20, Math.min(260, effSR));
+  const t = (sr-20)/(260-20);
+  let pDot=0.62-0.32*t, p1=0.24-0.05*t, p2=0.06, p3=0.01, p4=0.05+0.20*t, p6=0.02+0.10*t;
+  const sum = pDot+p1+p2+p3+p4+p6;
+  pDot/=sum; p1/=sum; p2/=sum; p3/=sum; p4/=sum; p6/=sum;
+  const r = Math.random();
+  let c=pDot; if(r<c) return 0;
+  c+=p1; if(r<c) return 1;
+  c+=p2; if(r<c) return 2;
+  c+=p3; if(r<c) return 3;
+  c+=p4; if(r<c) return 4;
+  return 6;
+}
+
+// Expands {cardId: oversCount} into an ordered 50-entry over-by-over bowler sequence,
+// avoiding back-to-back overs from the same bowler wherever an alternative exists.
+function buildOverSequence(planObj){
+  let remaining = Object.entries(planObj).filter(([id,ov])=>ov>0).map(([id,ov])=>({id:+id, left:+ov}));
+  const seq = [];
+  let lastBowler = null;
+  while(seq.length<50){
+    remaining.sort((a,b)=>b.left-a.left);
+    let choice = remaining.find(b=>b.id!==lastBowler && b.left>0);
+    if(!choice) choice = remaining.find(b=>b.left>0);
+    if(!choice) break; // shouldn't happen if plan sums to 50
+    choice.left--;
+    seq.push(choice.id);
+    lastBowler = choice.id;
+  }
+  return seq;
+}
+
+function simulateInnings(battingOrder, bowlingSeq, target){
+  let score=0, wickets=0, ballsFaced=0;
+  let onStrike=0, nonStrike=1, nextIn=2;
+  const batterRuns={}, batterBalls={};
+  const fallOfWickets=[], overSummaries=[];
+  outer:
+  for(let over=0; over<50; over++){
+    const bowler = bowlingSeq[over];
+    let runsThisOver=0, ballsThisOver=0;
+    for(let ball=0; ball<6; ball++){
+      const striker = battingOrder[onStrike];
+      if(Math.random() < wicketChance(bowler, striker)){
+        wickets++;
+        fallOfWickets.push({over:over+1, ball:ball+1, score, batter:striker, bowler});
+        ballsFaced++; ballsThisOver++;
+        batterBalls[striker] = (batterBalls[striker]||0)+1;
+        batterRuns[striker] = batterRuns[striker]||0;
+        if(wickets>=10){ overSummaries.push({over:over+1,bowler,runs:runsThisOver,balls:ballsThisOver}); break outer; }
+        onStrike = nextIn; nextIn++;
+        continue;
+      }
+      const runs = ballOutcome(effectiveSR(striker, bowler));
+      score+=runs; runsThisOver+=runs; ballsFaced++; ballsThisOver++;
+      batterRuns[striker] = (batterRuns[striker]||0)+runs;
+      batterBalls[striker] = (batterBalls[striker]||0)+1;
+      if(runs%2===1){ const tmp=onStrike; onStrike=nonStrike; nonStrike=tmp; }
+      if(target && score>=target){ overSummaries.push({over:over+1,bowler,runs:runsThisOver,balls:ballsThisOver}); break outer; }
+    }
+    overSummaries.push({over:over+1, bowler, runs:runsThisOver, balls:ballsThisOver});
+    const tmp=onStrike; onStrike=nonStrike; nonStrike=tmp;
+  }
+  return {score, wickets, ballsFaced, batterRuns, batterBalls, fallOfWickets, overSummaries, allOut: wickets>=10};
+}
+
+/* ---- AI heuristics (used for the computer opponent's squad decisions) ---- */
+function aiPickXI(squad15){
+  const scored = squad15.map(id=>{
+    const c = byId[id];
+    const bowlScore = (BOWL_OVERS[id]||0)>0 ? (c.wkts*15 + (10-Math.min(BOWL_ECON[id]||8,10))*3) : 0;
+    const value = c.runs*0.6 + c.sr*0.25 + bowlScore + (c.catches+c.stumpings)*4;
+    return {id, value};
+  });
+  scored.sort((a,b)=>b.value-a.value);
+  return scored.slice(0,11).map(s=>s.id);
+}
+function aiBattingOrder(xi){
+  return xi.slice().sort((a,b)=>{
+    const A=byId[a], B=byId[b];
+    return (B.runs*0.5+B.sr*0.5) - (A.runs*0.5+A.sr*0.5);
+  });
+}
+function aiBowlingPlan(xi){
+  const ranked = xi.slice().sort((a,b)=>{
+    const scoreA = (BOWL_OVERS[a]||0)>0 ? (byId[a].wkts*10 - (BOWL_ECON[a]||8)) : -20;
+    const scoreB = (BOWL_OVERS[b]||0)>0 ? (byId[b].wkts*10 - (BOWL_ECON[b]||8)) : -20;
+    return scoreB-scoreA;
+  });
+  const plan = {}; xi.forEach(id=>plan[id]=0);
+  let remaining = 50;
+  for(const id of ranked){
+    if(remaining<=0) break;
+    const give = Math.min(10, remaining);
+    plan[id] = give;
+    remaining -= give;
+  }
+  return plan;
+}
+function aiTossChoice(){ return Math.random()<0.5 ? 'bat' : 'bowl'; }
+
+/* ---- squad dealing / setup orchestration (host-authoritative) ---- */
+function dealSquads(){
+  const pool = shuffle(CARDS.map(c=>c.id));
+  squadHost = pool.slice(0,15);
+  squadPeer = pool.slice(15,30);
+  xiHost=null; xiPeer=null;
+  tossWinner=null; battingTeamSide=null;
+  ordersBySide={host:null,peer:null};
+  plansBySide={host:null,peer:null};
+  inningsResults=[];
+  pendingHostAction=null; pendingSquadSummary=null;
+}
+
+function startSquadMatchAsHost(){
+  dealSquads();
+  if(conn && conn.open) conn.send({type:'squad-deal', squad:squadPeer});
+  if(isAI) xiPeer = aiPickXI(squadPeer);
+  selectedXISet = new Set();
+  renderSquadXIScreen(squadHost);
+  show('screen-squad-xi');
+}
+
+function sideLabel(side, perspective){
+  if(side===perspective) return 'You';
+  return isAI ? 'The Computer' : 'Opponent';
+}
+
+/* ---- XI selection ---- */
+function renderSquadXIScreen(squad){
+  const list = document.getElementById('squad-xi-list');
+  list.innerHTML = squad.map(id=>{
+    const c = byId[id];
+    const bowlLine = (BOWL_OVERS[id]||0)>0 ? ` · Bowl: ${c.wkts}wkt @ ${BOWL_ECON[id].toFixed(2)}` : '';
+    return `<div class="squad-row" id="squad-row-${id}" onclick="toggleXI(${id})">
+      <div>
+        <div class="name">${c.name}</div>
+        <div class="meta">${c.team} · ${c.match}</div>
+      </div>
+      <div class="figs">${c.runs} runs @ ${c.sr.toFixed(0)} SR${bowlLine}</div>
+    </div>`;
+  }).join('');
+  document.getElementById('squad-xi-count').textContent = 'Selected: 0 / 11';
+  document.getElementById('squad-xi-confirm').disabled = true;
+  document.getElementById('squad-xi-status').textContent = '';
+}
+function toggleXI(id){
+  if(selectedXISet.has(id)){ selectedXISet.delete(id); }
+  else { if(selectedXISet.size>=11) return; selectedXISet.add(id); }
+  document.getElementById(`squad-row-${id}`).classList.toggle('selected', selectedXISet.has(id));
+  document.getElementById('squad-xi-count').textContent = `Selected: ${selectedXISet.size} / 11`;
+  document.getElementById('squad-xi-confirm').disabled = selectedXISet.size!==11;
+}
+function confirmXI(){
+  const xi = Array.from(selectedXISet);
+  if(xi.length!==11) return;
+  if(isHost){
+    xiHost = xi;
+    document.getElementById('squad-xi-status').innerHTML = '<span class="spin"></span>XI locked — waiting for opponent…';
+    document.getElementById('squad-xi-confirm').disabled = true;
+    checkBothXIReady();
+  } else {
+    myXI = xi;
+    if(conn && conn.open) conn.send({type:'squad-xi', xi});
+    document.getElementById('squad-xi-status').innerHTML = '<span class="spin"></span>XI sent — waiting for opponent…';
+    document.getElementById('squad-xi-confirm').disabled = true;
+  }
+}
+function checkBothXIReady(){ if(xiHost && xiPeer) doToss(); }
+
+/* ---- toss ---- */
+function showTossUI(winnerSide){
+  show('screen-squad-toss');
+  const amWinner = (isHost && winnerSide==='host') || (!isHost && winnerSide==='peer');
+  document.getElementById('toss-msg').textContent = 'Flipping the coin…';
+  document.getElementById('toss-choice-row').style.display = 'none';
+  document.getElementById('toss-status').textContent = '';
+  setTimeout(()=>{
+    document.getElementById('toss-msg').textContent = amWinner ? 'You won the toss!' : (isAI ? 'The computer won the toss.' : 'Your opponent won the toss.');
+    if(amWinner){
+      document.getElementById('toss-choice-row').style.display = 'flex';
+    } else {
+      document.getElementById('toss-status').innerHTML = '<span class="spin"></span>' + (isAI ? 'The computer is deciding…' : "Waiting for their decision…");
+    }
+  }, 1400);
+}
+function doToss(){
+  tossWinner = Math.random()<0.5 ? 'host' : 'peer';
+  if(conn && conn.open) conn.send({type:'squad-toss', winner: tossWinner});
+  showTossUI(tossWinner);
+  if(isAI && tossWinner==='peer'){
+    setTimeout(()=>{ setBattingTeam(aiTossChoice()==='bat' ? 'peer':'host'); }, 2200);
+  }
+}
+function submitTossChoice(choice){
+  if(isHost){
+    setBattingTeam(choice==='bat' ? 'host' : 'peer');
+  } else {
+    if(conn && conn.open) conn.send({type:'squad-toss-choice', choice});
+    document.getElementById('toss-choice-row').style.display = 'none';
+    document.getElementById('toss-status').innerHTML = '<span class="spin"></span>Starting the match…';
+  }
+}
+function setBattingTeam(side){
+  battingTeamSide = side;
+  if(conn && conn.open) conn.send({type:'squad-teams', battingTeam:side});
+  prepareInnings(1);
+  goToOwnSetupScreen();
+}
+
+/* ---- innings setup (batting order / bowling plan) ---- */
+function prepareInnings(inningsNum){
+  currentInningsNum = inningsNum;
+  currentBattingSide = inningsNum===1 ? battingTeamSide : (battingTeamSide==='host' ? 'peer':'host');
+  currentBowlingSide = currentBattingSide==='host' ? 'peer' : 'host';
+  currentTarget = inningsNum===2 ? inningsResults[0].score+1 : null;
+  ordersBySide[currentBattingSide] = null;
+  plansBySide[currentBowlingSide] = null;
+
+  const peerRole = currentBattingSide==='peer' ? 'batting' : 'bowling';
+  if(conn && conn.open) conn.send({type:'squad-need-setup', inningsNum, role:peerRole, target:currentTarget});
+
+  if(isAI){
+    const aiRole = currentBattingSide==='peer' ? 'batting' : 'bowling';
+    setTimeout(()=>{
+      if(aiRole==='batting') submitOrder('peer', aiBattingOrder(xiPeer));
+      else submitPlan('peer', aiBowlingPlan(xiPeer));
+    }, 800);
+  }
+}
+function goToOwnSetupScreen(){
+  const role = currentBattingSide==='host' ? 'batting' : (currentBowlingSide==='host' ? 'bowling' : null);
+  if(!role) return;
+  renderSetupScreen(role, currentTarget, currentInningsNum, xiHost);
+  show('screen-squad-setup');
+}
+function renderSetupScreen(role, target, inningsNum, xiIds){
+  document.getElementById('setup-eyebrow').textContent = `Squad Battle — Innings ${inningsNum}`;
+  document.getElementById('setup-title').textContent = role==='batting' ? 'Set Your Batting Order' : 'Set Your Bowling Attack (50 overs, max 10 each)';
+  document.getElementById('setup-target').textContent = target ? `Target: ${target} runs to win` : '';
+  document.getElementById('setup-status').textContent = '';
+  document.getElementById('setup-confirm').disabled = false;
+  currentSetupRole = role;
+  currentSetupXI = xiIds;
+  if(role==='batting'){
+    workingOrder = xiIds.slice();
+    renderOrderRows();
+  } else {
+    workingPlan = {}; xiIds.forEach(id=>workingPlan[id]=0);
+    renderPlanRows();
+  }
+}
+function renderOrderRows(){
+  document.getElementById('setup-body').innerHTML = workingOrder.map((id,i)=>{
+    const c = byId[id];
+    return `<div class="order-row">
+      <span class="pos">${i+1}</span>
+      <span class="name">${c.name} <span style="color:var(--cream-dim); font-size:11px;">(${c.team})</span></span>
+      <span class="figs">${c.sr.toFixed(0)} SR</span>
+      <button onclick="moveOrder(${i},-1)" ${i===0?'disabled':''}>↑</button>
+      <button onclick="moveOrder(${i},1)" ${i===workingOrder.length-1?'disabled':''}>↓</button>
+    </div>`;
+  }).join('');
+}
+function moveOrder(i, dir){
+  const j = i+dir;
+  if(j<0 || j>=workingOrder.length) return;
+  [workingOrder[i], workingOrder[j]] = [workingOrder[j], workingOrder[i]];
+  renderOrderRows();
+}
+function renderPlanRows(){
+  const total = Object.values(workingPlan).reduce((a,b)=>a+b,0);
+  document.getElementById('setup-body').innerHTML =
+    `<div class="status-line" style="margin-bottom:10px; font-size:15px; text-align:center;" id="plan-total">Overs allocated: ${total} / 50</div>` +
+    currentSetupXI.map(id=>{
+      const c = byId[id];
+      const econ = BOWL_ECON[id] ? BOWL_ECON[id].toFixed(2) : '—';
+      return `<div class="plan-row">
+        <span class="name">${c.name}</span>
+        <span class="meta">econ ${econ}</span>
+        <input type="number" min="0" max="10" value="${workingPlan[id]}" onchange="setPlanOvers(${id}, this.value)">
+      </div>`;
+    }).join('');
+}
+function setPlanOvers(id, val){
+  const v = Math.max(0, Math.min(10, parseInt(val)||0));
+  workingPlan[id] = v;
+  const total = Object.values(workingPlan).reduce((a,b)=>a+b,0);
+  const totalEl = document.getElementById('plan-total');
+  if(totalEl) totalEl.textContent = `Overs allocated: ${total} / 50`;
+}
+function autoFillSetup(){
+  if(currentSetupRole==='batting'){
+    workingOrder = aiBattingOrder(currentSetupXI);
+    renderOrderRows();
+  } else {
+    workingPlan = aiBowlingPlan(currentSetupXI);
+    renderPlanRows();
+  }
+}
+function confirmSetup(){
+  if(currentSetupRole==='batting'){
+    const order = workingOrder.slice();
+    if(isHost){ submitOrder('host', order); }
+    else {
+      if(conn && conn.open) conn.send({type:'squad-batting-order', order});
+      document.getElementById('setup-status').innerHTML = '<span class="spin"></span>Waiting for the bowling side to lock their attack…';
+      document.getElementById('setup-confirm').disabled = true;
+    }
+  } else {
+    const total = Object.values(workingPlan).reduce((a,b)=>a+b,0);
+    if(total!==50){ document.getElementById('setup-status').textContent = `Overs must total exactly 50 (currently ${total}).`; return; }
+    const plan = {...workingPlan};
+    if(isHost){ submitPlan('host', plan); }
+    else {
+      if(conn && conn.open) conn.send({type:'squad-bowling-plan', plan});
+      document.getElementById('setup-status').innerHTML = '<span class="spin"></span>Waiting for the batting side to set their order…';
+      document.getElementById('setup-confirm').disabled = true;
+    }
+  }
+}
+function submitOrder(side, order){
+  ordersBySide[side] = order;
+  if(side==='host'){
+    document.getElementById('setup-status').innerHTML = '<span class="spin"></span>Waiting for the bowling side to lock their attack…';
+    document.getElementById('setup-confirm').disabled = true;
+  }
+  checkInningsReady();
+}
+function submitPlan(side, plan){
+  plansBySide[side] = plan;
+  if(side==='host'){
+    document.getElementById('setup-status').innerHTML = '<span class="spin"></span>Waiting for the batting side to set their order…';
+    document.getElementById('setup-confirm').disabled = true;
+  }
+  checkInningsReady();
+}
+function checkInningsReady(){
+  if(ordersBySide[currentBattingSide] && plansBySide[currentBowlingSide]){
+    runInningsSimulation();
+  }
+}
+
+/* ---- run the innings, show the break screen, move to the next phase ---- */
+function runInningsSimulation(){
+  const order = ordersBySide[currentBattingSide];
+  const planObj = plansBySide[currentBowlingSide];
+  const bowlingSeq = buildOverSequence(planObj);
+  const result = simulateInnings(order, bowlingSeq, currentTarget);
+  result.battingSide = currentBattingSide;
+  result.bowlingSide = currentBowlingSide;
+  result.inningsNum = currentInningsNum;
+  inningsResults.push(result);
+
+  if(conn && conn.open) conn.send({type:'squad-innings-result', result});
+  renderInningsBreak('host', result);
+
+  if(currentInningsNum===1){
+    prepareInnings(2);
+    pendingHostAction = 'setup2';
+  } else {
+    const r1 = inningsResults[0], r2 = inningsResults[1];
+    let winnerSide, marginText;
+    if(r2.score>r1.score){ winnerSide=r2.battingSide; const w=11-r2.wickets; marginText = `Won by ${w} wicket${w===1?'':'s'}`; }
+    else if(r1.score>r2.score){ winnerSide=r1.battingSide; const runsMargin=r1.score-r2.score; marginText = `Won by ${runsMargin} run${runsMargin===1?'':'s'}`; }
+    else { winnerSide='tie'; marginText='Match tied'; }
+    const summary = {r1, r2, winnerSide, marginText};
+    if(conn && conn.open) conn.send({type:'squad-match-result', summary});
+    pendingSquadSummary = summary;
+    pendingHostAction = 'result';
+  }
+}
+
+function renderInningsBreak(perspective, result){
+  show('screen-squad-break');
+  const battingLabel = sideLabel(result.battingSide, perspective);
+  const bowlingLabel = sideLabel(result.bowlingSide, perspective);
+  const overs = Math.floor(result.ballsFaced/6) + '.' + (result.ballsFaced%6);
+  const topBatters = Object.entries(result.batterRuns).sort((a,b)=>b[1]-a[1]).slice(0,4)
+    .map(([id,r])=>`${byId[id].name} ${r}(${result.batterBalls[id]||0})`).join(' · ');
+  const bowlerFigs = {};
+  result.overSummaries.forEach(o=>{ bowlerFigs[o.bowler] = bowlerFigs[o.bowler] || {runs:0}; bowlerFigs[o.bowler].runs += o.runs; });
+  const bowlerWkts = {};
+  result.fallOfWickets.forEach(w=>{ bowlerWkts[w.bowler] = (bowlerWkts[w.bowler]||0)+1; });
+  const topBowlers = Object.entries(bowlerFigs).sort((a,b)=>(bowlerWkts[b[0]]||0)-(bowlerWkts[a[0]]||0) || a[1].runs-b[1].runs).slice(0,4)
+    .map(([id,f])=>`${byId[id].name} ${bowlerWkts[id]||0}/${f.runs}`).join(' · ');
+
+  document.getElementById('break-body').innerHTML = `
+    <h2 style="text-align:center; font-family:'Bebas Neue',sans-serif; font-size:34px; margin-bottom:4px;">${battingLabel} ${result.score}/${result.wickets} <span style="font-size:16px; color:var(--cream-dim); font-family:'Space Mono',monospace;">(${overs} ov)</span></h2>
+    <p class="status-line" style="text-align:center;">${result.allOut ? 'All out' : 'Innings closed'} · ${bowlingLabel} bowled</p>
+    <div style="margin:18px 0 10px; font-size:13px; color:var(--cream-dim);"><b style="color:var(--gold-bright);">Top scores:</b> ${topBatters||'—'}</div>
+    <div style="font-size:13px; color:var(--cream-dim);"><b style="color:var(--gold-bright);">Bowling:</b> ${topBowlers||'—'}</div>
+    ${result.inningsNum===1 ? `<div class="status-line" style="margin-top:16px; text-align:center; color:var(--gold-bright);">Target for the chase: ${result.score+1} runs</div>` : ''}
+  `;
+  const btn = document.querySelector('#screen-squad-break button');
+  btn.textContent = result.inningsNum===1 ? 'Continue to Innings 2' : 'View Final Result';
+}
+
+function continueToNextPhase(){
+  if(isHost){
+    if(pendingHostAction==='setup2'){ pendingHostAction=null; goToOwnSetupScreen(); }
+    else if(pendingHostAction==='result'){ pendingHostAction=null; renderSquadResult('host', pendingSquadSummary); }
+  } else {
+    if(pendingSetup){ const p=pendingSetup; pendingSetup=null; renderSetupScreen(p.role, p.target, p.inningsNum, myXI); show('screen-squad-setup'); }
+    else if(pendingMatchResultData){ const s=pendingMatchResultData; pendingMatchResultData=null; renderSquadResult('peer', s); }
+  }
+}
+
+function renderSquadResult(perspective, summary){
+  show('screen-squad-result');
+  const {r1, r2, winnerSide, marginText} = summary;
+  const iWon = winnerSide==='tie' ? 'tie' : (winnerSide===perspective);
+  document.getElementById('squad-result-msg').textContent = iWon==='tie' ? 'MATCH TIED' : (iWon ? 'YOU WON THE MATCH' : `${isAI?'THE COMPUTER':'YOUR OPPONENT'} WON THE MATCH`);
+  const l1 = sideLabel(r1.battingSide, perspective), l2 = sideLabel(r2.battingSide, perspective);
+  document.getElementById('squad-result-body').innerHTML = `
+    <p style="text-align:center; color:var(--gold-bright); font-family:'Space Mono',monospace; margin-bottom:14px;">${marginText}</p>
+    <div style="display:flex; justify-content:space-between; padding:10px 4px; border-bottom:1px solid var(--line); font-family:'Space Mono',monospace;"><span>${l1} (1st innings)</span><span>${r1.score}/${r1.wickets}</span></div>
+    <div style="display:flex; justify-content:space-between; padding:10px 4px; font-family:'Space Mono',monospace;"><span>${l2} (chasing)</span><span>${r2.score}/${r2.wickets}</span></div>
+  `;
+}
+
+function requestSquadRematch(){
+  if(isHost){
+    startSquadMatchAsHost();
+  } else {
+    if(conn && conn.open){
+      conn.send({type:'squad-rematch'});
+      document.getElementById('squad-result-body').innerHTML += '<p class="status-line" style="margin-top:10px;"><span class="spin"></span>Starting a new Squad Battle…</p>';
+    }
+  }
 }
 </script>
 </body>
